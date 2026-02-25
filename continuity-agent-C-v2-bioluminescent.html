@@ -432,6 +432,90 @@
   </div>
 
   <script>
+    // ── ORB CANVAS SETUP ─────────────────────────────────────────────
+const orbCanvas = document.getElementById('orb-canvas');
+const orbCtx    = orbCanvas.getContext('2d');
+
+function resizeOrbCanvas() {
+  orbCanvas.width  = window.innerWidth;
+  orbCanvas.height = window.innerHeight;
+}
+resizeOrbCanvas();
+window.addEventListener('resize', resizeOrbCanvas);
+
+// ── ORB STATE ─────────────────────────────────────────────────────
+const orbState = {
+  energy:      0,    // 0–1, drives glow and motion speed
+  approaching: 0,    // 0–1, drives scale and blur
+};
+
+function drawOrb(timestamp) {
+  const W = orbCanvas.width;
+  const H = orbCanvas.height;
+  orbCtx.clearRect(0, 0, W, H);
+
+  const t   = timestamp / 1000;
+  const cx  = W / 2;
+  const cy  = H / 2;
+
+  // Orbital drift — irrational periods prevent perfect repetition
+  const orbitW  = W * 0.08;
+  const orbitH  = H * 0.06;
+  const ox = cx + Math.sin(t / 11.3) * orbitW + Math.sin(t / 7.7)  * orbitW * 0.3;
+  const oy = cy + Math.cos(t / 14.1) * orbitH + Math.cos(t / 9.2)  * orbitH * 0.2;
+
+  // Z-depth — scale oscillates with separate period
+  const depthCycle  = (Math.sin(t / 13.7) + 1) / 2;  // 0–1
+  const approaching = depthCycle * 0.18 + orbState.energy * 0.08;
+  orbState.approaching = approaching;
+  const scale = 0.90 + approaching * 0.28;
+
+  // Update orb canvas blur (closer = clearer)
+  const blurPx = Math.round((1 - approaching) * 6);
+  orbCanvas.style.filter = `blur(${blurPx}px)`;
+
+  // Base orb radius
+  const baseR = Math.min(W, H) * 0.275 * scale;
+
+  // ── OUTER SHELL (cellular membrane) ──────────────────────────
+  const glowAlpha = 0.04 + orbState.energy * 0.10;
+  const shellGrad = orbCtx.createRadialGradient(ox, oy, baseR * 0.7, ox, oy, baseR * 1.1);
+  shellGrad.addColorStop(0,   `rgba(232,160,48,0)`);
+  shellGrad.addColorStop(0.6, `rgba(232,160,48,${glowAlpha * 0.5})`);
+  shellGrad.addColorStop(1,   `rgba(232,160,48,${glowAlpha})`);
+  orbCtx.beginPath();
+  orbCtx.arc(ox, oy, baseR * 1.1, 0, Math.PI * 2);
+  orbCtx.fillStyle = shellGrad;
+  orbCtx.fill();
+
+  // ── INNER ORB (dark semi-transparent body) ────────────────────
+  const innerGrad = orbCtx.createRadialGradient(
+    ox - baseR * 0.2, oy - baseR * 0.2, 0,
+    ox, oy, baseR
+  );
+  innerGrad.addColorStop(0,   'rgba(8,8,16,0.88)');
+  innerGrad.addColorStop(0.6, 'rgba(12,10,20,0.75)');
+  innerGrad.addColorStop(1,   'rgba(18,14,28,0.50)');
+  orbCtx.beginPath();
+  orbCtx.arc(ox, oy, baseR, 0, Math.PI * 2);
+  orbCtx.fillStyle = innerGrad;
+  orbCtx.fill();
+
+  // ── DEPTH GLOW ring ──────────────────────────────────────────
+  const ringAlpha = 0.03 + orbState.energy * 0.08;
+  const ringGrad  = orbCtx.createRadialGradient(ox, oy, baseR * 0.85, ox, oy, baseR * 1.05);
+  ringGrad.addColorStop(0,   `rgba(232,160,48,${ringAlpha})`);
+  ringGrad.addColorStop(1,   'rgba(232,160,48,0)');
+  orbCtx.beginPath();
+  orbCtx.arc(ox, oy, baseR * 1.05, 0, Math.PI * 2);
+  orbCtx.fillStyle = ringGrad;
+  orbCtx.fill();
+
+  requestAnimationFrame(drawOrb);
+}
+
+requestAnimationFrame(drawOrb);
+
     // ── THINKING FORM ────────────────────────────────────────────────
     const thinkingForm = document.getElementById('thinking-form');
     const thinkLabel   = document.getElementById('thinking-label');
