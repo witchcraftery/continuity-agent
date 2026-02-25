@@ -341,15 +341,24 @@
         <circle cx="14" cy="14" r="2.5" fill="var(--accent)" fill-opacity="0.3"/>
       </svg>
     </div>
-    <div id="thinking-form">
-      <svg id="lemniscate" width="160" height="80" viewBox="-80 -40 160 80" fill="none"
-           xmlns="http://www.w3.org/2000/svg">
-        <path id="lemni-path" stroke="var(--accent)" stroke-width="1.5"
-              stroke-opacity="0.5" stroke-linecap="round" fill="none"
-              d="M 60,0 C 60,33 33,40 0,0 C -33,-40 -60,-33 -60,0 C -60,33 -33,40 0,0 C 33,-40 60,-33 60,0 Z"/>
-      </svg>
-      <span id="thinking-label">Thinking...</span>
-    </div>
+  <div id="thinking-form">
+    <svg id="rotating-ellipse" width="160" height="80"
+         viewBox="-80 -40 160 80" fill="none"
+         xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="0" cy="0" rx="64" ry="28"
+               stroke="var(--accent)"
+               stroke-width="1"
+               stroke-opacity="0.45"
+               stroke-dasharray="4 8"
+               fill="none"/>
+      <ellipse cx="0" cy="0" rx="40" ry="16"
+               stroke="var(--accent)"
+               stroke-width="0.5"
+               stroke-opacity="0.2"
+               fill="none"/>
+    </svg>
+    <span id="thinking-label">Thinking...</span>
+  </div>
   </div>
   <div id="zone2"></div>
   <div id="zone3"></div>
@@ -382,23 +391,22 @@
     const thinkingForm = document.getElementById('thinking-form');
     const thinkLabel   = document.getElementById('thinking-label');
 
-    // Infinite breathe: scale 0.92 ↔ 1.08, never exactly repeating
-    gsap.to('#lemniscate', {
-      scaleX: 1.08, scaleY: 0.94,
-      duration: 3.5,
-      ease: 'sine.inOut',
-      yoyo: true,
+    // ── THEME D: Rotating dashed ellipse thinking form ───────────────
+    gsap.to('#rotating-ellipse', {
+      rotationY: 360,
+      duration: 4,
+      ease: 'none',
       repeat: -1,
-      transformOrigin: 'center center'
+      transformOrigin: 'center center',
+      transformPerspective: 600
     });
-    // Slight drift offset so it doesn't feel mechanical
-    gsap.to('#lemniscate', {
-      scaleX: 0.96, scaleY: 1.06,
-      duration: 4.2,
+    // Subtle scale breathe overlaid — never perfectly still
+    gsap.to('#rotating-ellipse', {
+      scaleX: 1.06, scaleY: 0.96,
+      duration: 3.8,
       ease: 'sine.inOut',
       yoyo: true,
       repeat: -1,
-      delay: 1.4,
       transformOrigin: 'center center'
     });
 
