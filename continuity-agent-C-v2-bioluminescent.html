@@ -31,6 +31,14 @@
       --think-dur:  2000;
       --speech-dur: 2500;
       --wght-ms:    600;
+      /* ── V2 LAYER TOKENS ──────────────────────────────────────────────── */
+      --g1: rgba(12,8,20,0.9);
+      --g2: rgba(20,14,8,0.8);
+      --g1x: 30%; --g1y: 40%;
+      --g2x: 75%; --g2y: 65%;
+      --frost-blur: 32px;
+      --orb-blur: 0px;
+      --orb-size: 55vw;
     }
     /* ── END THEME TOKENS ─────────────────────────────────────────── */
 
@@ -329,6 +337,48 @@
       transition: opacity 600ms ease;
       pointer-events: none;
     }
+
+    /* ── V2: LAYER STACK ─────────────────────────────────────────── */
+    #bg-gradient {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at var(--g1x) var(--g1y), var(--g1) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 80% at var(--g2x) var(--g2y), var(--g2) 0%, transparent 60%),
+        var(--bg);
+    }
+
+    #orb-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+      filter: blur(var(--orb-blur));
+      transition: filter 2s ease;
+    }
+
+    #frost {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      backdrop-filter: blur(var(--frost-blur)) saturate(120%) brightness(0.82);
+      -webkit-backdrop-filter: blur(var(--frost-blur)) saturate(120%) brightness(0.82);
+      overflow: hidden;
+    }
+
+    /* Ensure content zones sit above frost */
+    #zone1, #zone2, #zone3 { z-index: 10; }
+    #trigger-bar            { z-index: 20; }
+
+    /* ── V2: CONTAINER SPACING FIX ───────────────────────────────── */
+    .panel                  { padding: 2rem 2.5rem; }
+    .panel h2               { padding: 0 0 1rem 0; margin-bottom: 0.75rem; }
+    .notepad                { padding: 2rem 2.5rem; }
+    .notepad h2             { padding: 0 0 1rem 0; margin-bottom: 0.75rem; }
   </style>
 </head>
 <body>
