@@ -928,10 +928,12 @@ async function scenario3() {
     const noteTitle = notepad.querySelector('#note-title');
     const noteLines = notepad.querySelector('#note-lines');
 
+    // Start notepad at zone3 boundary and grow upward — transformOrigin anchors to bottom
+    gsap.set(notepad, { transformOrigin: 'bottom center' });
     gsap.fromTo(notepad,
-      { opacity: 0, filter: 'blur(8px)', scaleY: 0.6, y: 40 },
+      { opacity: 0, filter: 'blur(8px)', scaleY: 0.05, y: 120 },
       { opacity: 1, filter: 'blur(0px)', scaleY: 1, y: 0,
-        duration: 0.5, ease: 'power3.out' }
+        duration: 0.6, ease: 'power3.out' }
     );
     noteTitle.classList.add('focused');
 
@@ -958,9 +960,10 @@ async function scenario3() {
     gsap.fromTo(doneBtn, { opacity: 0 }, { opacity: 1, duration: 0.4 });
 
     doneBtn.addEventListener('click', async () => {
+      gsap.set(notepad, { transformOrigin: 'bottom center' });
       gsap.to(notepad, {
-        scaleY: 0.6, y: 40, opacity: 0, filter: 'blur(8px)',
-        duration: 0.4, ease: 'power2.in',
+        scaleY: 0.05, y: 120, opacity: 0, filter: 'blur(8px)',
+        duration: 0.45, ease: 'power2.in',
         onComplete: () => notepad.remove()
       });
 
