@@ -64,6 +64,7 @@
       align-items: center;
       justify-content: center;
       pointer-events: none;
+      position: relative;
     }
 
     #zone2 {
@@ -982,6 +983,10 @@ async function scenario3() {
   noteShelfCard.addEventListener('click', expandNote);
   setTimeout(expandNote, 3000);
 }
+
+// ── INITIAL STATE ─────────────────────────────────────────────────
+// Ensure idle mark is visible on load (thinking form is already opacity:0 from CSS)
+gsap.set('#idle-mark', { opacity: 1 });
   </script>
 </body>
 </html>
