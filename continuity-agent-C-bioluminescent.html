@@ -335,15 +335,11 @@
         <circle cx="14" cy="14" r="2.5" fill="var(--accent)" fill-opacity="0.3"/>
       </svg>
     </div>
-    <div id="thinking-form">
-      <svg id="lemniscate" width="160" height="80" viewBox="-80 -40 160 80" fill="none"
-           xmlns="http://www.w3.org/2000/svg">
-        <path id="lemni-path" stroke="var(--accent)" stroke-width="1.5"
-              stroke-opacity="0.5" stroke-linecap="round" fill="none"
-              d="M 60,0 C 60,33 33,40 0,0 C -33,-40 -60,-33 -60,0 C -60,33 -33,40 0,0 C 33,-40 60,-33 60,0 Z"/>
-      </svg>
-      <span id="thinking-label">Thinking...</span>
-    </div>
+  <div id="thinking-form">
+    <canvas id="lissajous-canvas" width="180" height="140"
+            style="display:block;"></canvas>
+    <span id="thinking-label">Thinking...</span>
+  </div>
   </div>
   <div id="zone2"></div>
   <div id="zone3"></div>
@@ -367,25 +363,46 @@
     const thinkingForm = document.getElementById('thinking-form');
     const thinkLabel   = document.getElementById('thinking-label');
 
-    // Infinite breathe: scale 0.92 ↔ 1.08, never exactly repeating
-    gsap.to('#lemniscate', {
-      scaleX: 1.08, scaleY: 0.94,
-      duration: 3.5,
-      ease: 'sine.inOut',
-      yoyo: true,
-      repeat: -1,
-      transformOrigin: 'center center'
-    });
-    // Slight drift offset so it doesn't feel mechanical
-    gsap.to('#lemniscate', {
-      scaleX: 0.96, scaleY: 1.06,
-      duration: 4.2,
-      ease: 'sine.inOut',
-      yoyo: true,
-      repeat: -1,
-      delay: 1.4,
-      transformOrigin: 'center center'
-    });
+    // ── THEME C: Lissajous dot-trail thinking form ───────────────────
+const lissCanvas  = document.getElementById('lissajous-canvas');
+const lissCtx     = lissCanvas.getContext('2d');
+const CX = lissCanvas.width  / 2;
+const CY = lissCanvas.height / 2;
+const A  = 72, B = 52;
+const a  = 3,  b = 2;
+let   lissT = 0;
+const TRAIL_LENGTH = 40;
+const trail = [];
+
+function drawLissajous() {
+  lissCtx.clearRect(0, 0, lissCanvas.width, lissCanvas.height);
+
+  lissT += 0.018;
+  const x = CX + A * Math.sin(a * lissT + Math.PI / 2);
+  const y = CY + B * Math.sin(b * lissT);
+  trail.push({ x, y });
+  if (trail.length > TRAIL_LENGTH) trail.shift();
+
+  for (let i = 0; i < trail.length; i++) {
+    const pt       = trail[i];
+    const progress = i / trail.length;
+    const alpha    = progress * progress * 0.7;
+    const radius   = 1 + progress * 2.5;
+    lissCtx.beginPath();
+    lissCtx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+    lissCtx.fillStyle = `rgba(232, 160, 48, ${alpha})`;
+    lissCtx.fill();
+  }
+
+  lissCtx.beginPath();
+  lissCtx.arc(x, y, 3.5, 0, Math.PI * 2);
+  lissCtx.fillStyle = 'rgba(232, 160, 48, 0.9)';
+  lissCtx.fill();
+
+  requestAnimationFrame(drawLissajous);
+}
+
+drawLissajous();
 
 // ── LIFECYCLE: birth / float / death ────────────────────────────
 const BIRTH_MS = parseInt(getComputedStyle(document.documentElement)
