@@ -385,6 +385,201 @@
       delay: 1.4,
       transformOrigin: 'center center'
     });
+
+// ── LIFECYCLE: birth / float / death ────────────────────────────
+const BIRTH_MS = parseInt(getComputedStyle(document.documentElement)
+                   .getPropertyValue('--birth-ms')) || 450;
+
+function birth(el, delay = 0) {
+  return new Promise(resolve => {
+    gsap.fromTo(el,
+      { opacity: 0, filter: 'blur(12px)', scale: 0.95 },
+      {
+        opacity: 1, filter: 'blur(0px)', scale: 1,
+        duration: BIRTH_MS / 1000,
+        delay: delay / 1000,
+        ease: 'power3.out',
+        onComplete: resolve
+      }
+    );
+  });
+}
+
+function float(el) {
+  const amp  = parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue('--float-amp')
+  ) || -5;
+  const durS = parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue('--float-dur')
+  ) || 6;
+  gsap.to(el, {
+    y: amp,
+    duration: durS / 2,
+    ease: 'sine.inOut',
+    yoyo: true,
+    repeat: -1
+  });
+}
+
+function death(el, delay = 0) {
+  return new Promise(resolve => {
+    gsap.to(el, {
+      opacity: 0,
+      y: '-=28',
+      filter: 'blur(6px)',
+      duration: 0.5,
+      delay: delay / 1000,
+      ease: 'power2.inOut',
+      onComplete: () => {
+        el.remove();
+        resolve();
+      }
+    });
+  });
+}
+
+// Kill all floating tweens and death-dissolve all zone2/zone3 children
+async function clearAll() {
+  const zone2 = document.getElementById('zone2');
+  const zone3 = document.getElementById('zone3');
+  const speech = document.querySelectorAll('.agent-speech');
+  zone2.classList.remove('active');
+
+  const els = [
+    ...zone2.children,
+    ...zone3.children,
+    ...speech
+  ];
+  const promises = els.map((el, i) => death(el, i * 80));
+  await Promise.all(promises);
+}
+
+// ── UTILITY ───────────────────────────────────────────────────────
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// ── AGENT SPEECH ─────────────────────────────────────────────────
+const SPEECH_DUR = parseInt(
+  getComputedStyle(document.documentElement).getPropertyValue('--speech-dur')
+) || 3000;
+
+function agentSpeech(text) {
+  document.querySelectorAll('.agent-speech').forEach(el => el.remove());
+
+  const el = document.createElement('div');
+  el.className = 'agent-speech';
+  el.textContent = text;
+  document.body.appendChild(el);
+
+  gsap.fromTo(el,
+    { opacity: 0, y: 8 },
+    { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }
+  );
+
+  return new Promise(resolve => {
+    setTimeout(() => {
+      gsap.to(el, {
+        opacity: 0, y: -8, duration: 0.4, ease: 'power2.in',
+        onComplete: () => { el.remove(); resolve(); }
+      });
+    }, SPEECH_DUR);
+  });
+}
+
+// ── THINKING FORM SHOW / HIDE ─────────────────────────────────────
+const THINK_DUR = parseInt(
+  getComputedStyle(document.documentElement).getPropertyValue('--think-dur')
+) || 2500;
+
+function showThinking(label = 'Thinking...') {
+  thinkLabel.textContent = label;
+  gsap.to('#idle-mark', { opacity: 0, duration: 0.3 });
+  return new Promise(resolve => {
+    gsap.to(thinkingForm, {
+      opacity: 1, duration: 0.6, ease: 'power2.out',
+      onComplete: resolve
+    });
+  });
+}
+
+function hideThinking() {
+  return new Promise(resolve => {
+    gsap.to(thinkingForm, {
+      opacity: 0,
+      y: '-=20',
+      duration: 0.5,
+      ease: 'power2.in',
+      onComplete: () => {
+        gsap.set(thinkingForm, { y: 0 });
+        gsap.to('#idle-mark', { opacity: 1, duration: 0.6, delay: 0.5 });
+        resolve();
+      }
+    });
+  });
+}
+
+async function thinkingSequence(label) {
+  await showThinking(label);
+  await delay(THINK_DUR);
+  await hideThinking();
+}
+
+// ── TEXT STREAMER ─────────────────────────────────────────────────
+async function streamText(container, text, msPerChar = 18) {
+  container.textContent = '';
+  for (const char of text) {
+    container.textContent += char;
+    await delay(msPerChar);
+  }
+}
+
+// ── TRIGGER WIRING ────────────────────────────────────────────────
+let running = false;
+
+document.querySelectorAll('.trigger[data-scenario]').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    if (running) return;
+    running = true;
+    await clearAll();
+    const n = btn.dataset.scenario;
+    if (n === '1') await scenario1();
+    if (n === '2') await scenario2();
+    if (n === '3') await scenario3();
+    running = false;
+  });
+});
+
+document.addEventListener('keydown', async (e) => {
+  if (e.key === ' ' && !e.repeat) {
+    document.querySelectorAll('#zone2 .panel, #zone2 .notepad').forEach(el => {
+      gsap.to(el, { opacity: 0.3, duration: 0.3 });
+    });
+  }
+  if (running && e.key !== 'Escape' && e.key !== ' ') return;
+  if (e.key === '1') { running = true; await clearAll(); await scenario1(); running = false; }
+  if (e.key === '2') { running = true; await clearAll(); await scenario2(); running = false; }
+  if (e.key === '3') { running = true; await clearAll(); await scenario3(); running = false; }
+  if (e.key === 'Escape') { await clearAll(); running = false; }
+});
+
+document.addEventListener('keyup', (e) => {
+  if (e.key === ' ') {
+    document.querySelectorAll('#zone2 .panel, #zone2 .notepad').forEach(el => {
+      gsap.to(el, { opacity: 1, duration: 0.4 });
+    });
+  }
+});
+
+document.getElementById('reset-btn').addEventListener('click', async () => {
+  await clearAll();
+  running = false;
+});
+
+// Scenario stubs — will be filled in Tasks 6, 7, 8
+async function scenario1() {}
+async function scenario2() {}
+async function scenario3() {}
   </script>
 </body>
 </html>
