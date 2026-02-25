@@ -576,10 +576,409 @@ document.getElementById('reset-btn').addEventListener('click', async () => {
   running = false;
 });
 
-// Scenario stubs — will be filled in Tasks 6, 7, 8
-async function scenario1() {}
-async function scenario2() {}
-async function scenario3() {}
+// ── SVG ILLUSTRATION: Corgi on Unicycle ──────────────────────────
+function makeCorgSVG() {
+  return `<svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg"
+           style="width:100%;height:auto;display:block;border-radius:0.5rem;">
+    <rect width="400" height="280" fill="#2a1f14" rx="8"/>
+    <ellipse cx="200" cy="60" rx="130" ry="18" fill="none"
+             stroke="#c4622d" stroke-width="1" stroke-opacity="0.3"/>
+    <ellipse cx="200" cy="60" rx="90" ry="12" fill="none"
+             stroke="#c4622d" stroke-width="0.8" stroke-opacity="0.2"/>
+    <circle cx="200" cy="220" r="42" fill="none"
+            stroke="#ede8df" stroke-width="1.5" stroke-opacity="0.6"/>
+    <circle cx="200" cy="220" r="4" fill="#c4622d" fill-opacity="0.8"/>
+    <line x1="200" y1="178" x2="200" y2="262" stroke="#ede8df" stroke-width="0.8" stroke-opacity="0.3"/>
+    <line x1="158" y1="220" x2="242" y2="220" stroke="#ede8df" stroke-width="0.8" stroke-opacity="0.3"/>
+    <line x1="170" y1="190" x2="230" y2="250" stroke="#ede8df" stroke-width="0.8" stroke-opacity="0.2"/>
+    <line x1="230" y1="190" x2="170" y2="250" stroke="#ede8df" stroke-width="0.8" stroke-opacity="0.2"/>
+    <line x1="200" y1="178" x2="200" y2="150" stroke="#ede8df" stroke-width="2" stroke-opacity="0.5"/>
+    <ellipse cx="200" cy="135" rx="28" ry="18" fill="#c4622d" fill-opacity="0.5"/>
+    <circle cx="200" cy="112" r="16" fill="#c4622d" fill-opacity="0.6"/>
+    <polygon points="188,100 180,82 196,96" fill="#c4622d" fill-opacity="0.7"/>
+    <polygon points="212,100 220,82 204,96" fill="#c4622d" fill-opacity="0.7"/>
+    <circle cx="194" cy="110" r="2.5" fill="#1e1812"/>
+    <circle cx="206" cy="110" r="2.5" fill="#1e1812"/>
+    <circle cx="195" cy="109" r="0.8" fill="#ede8df" fill-opacity="0.6"/>
+    <circle cx="207" cy="109" r="0.8" fill="#ede8df" fill-opacity="0.6"/>
+    <ellipse cx="200" cy="117" rx="6" ry="4" fill="#b5622d" fill-opacity="0.5"/>
+    <line x1="172" y1="135" x2="148" y2="148" stroke="#ede8df" stroke-width="2" stroke-opacity="0.4" stroke-linecap="round"/>
+    <line x1="228" y1="135" x2="252" y2="148" stroke="#ede8df" stroke-width="2" stroke-opacity="0.4" stroke-linecap="round"/>
+    <line x1="80" y1="262" x2="320" y2="262" stroke="#ede8df" stroke-width="0.5" stroke-opacity="0.15"/>
+    <line x1="200" y1="0"  x2="100" y2="280" stroke="#ede8df" stroke-width="0.5" stroke-opacity="0.05"/>
+    <line x1="200" y1="0"  x2="200" y2="280" stroke="#ede8df" stroke-width="0.5" stroke-opacity="0.08"/>
+    <line x1="200" y1="0"  x2="300" y2="280" stroke="#ede8df" stroke-width="0.5" stroke-opacity="0.05"/>
+  </svg>`;
+}
+
+// ── SCENARIO 1: Image Generation ────────────────────────────────
+async function scenario1() {
+  const zone2 = document.getElementById('zone2');
+  const zone3 = document.getElementById('zone3');
+  zone2.classList.add('active');
+
+  agentSpeech('Creating that for you...');
+  await delay(400);
+  await thinkingSequence('Imagining...');
+
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+  panel.innerHTML = `<div id="corgi-img">${makeCorgSVG()}</div>`;
+  zone2.appendChild(panel);
+  await birth(panel);
+  float(panel);
+
+  const caption = document.createElement('div');
+  caption.className = 'panel-caption';
+  caption.textContent = 'A corgi who joined the circus.';
+  panel.appendChild(caption);
+  await birth(caption, 300);
+
+  await delay(200);
+  agentSpeech("Here's your corgi. Three months of training, apparently.");
+
+  await delay(3000);
+  gsap.to(caption, { opacity: 0.5, duration: 0.6 });
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'trigger';
+  saveBtn.style.marginTop = '0.5rem';
+  saveBtn.innerHTML = '<em>Save to shelf</em>';
+  panel.appendChild(saveBtn);
+  await birth(saveBtn, 200);
+
+  saveBtn.addEventListener('click', () => saveToShelf(panel, 'Corgi Circus', zone3));
+}
+
+async function saveToShelf(panel, label, zone3) {
+  gsap.to(panel, {
+    scale: 0.15,
+    opacity: 0,
+    duration: 0.5,
+    ease: 'power2.inOut',
+    onComplete: () => panel.remove()
+  });
+
+  await delay(300);
+
+  const card = document.createElement('div');
+  card.className = 'shelf-card';
+  card.innerHTML = `
+    <div class="card-label">${label}</div>
+    <div class="card-sub">Saved just now</div>
+  `;
+  zone3.appendChild(card);
+
+  gsap.fromTo(card,
+    { opacity: 0, filter: 'blur(8px)', scale: 0.9 },
+    { opacity: 0.3, filter: 'blur(0px)', scale: 1,
+      duration: 0.4, ease: 'power3.out',
+      onComplete: () => card.classList.add('live') }
+  );
+
+  agentSpeech('Saved.');
+
+  card.addEventListener('click', () => {
+    gsap.to(card, { opacity: 1, duration: 0.3 });
+  });
+}
+
+// ── SVG MAP: North Portland streets ─────────────────────────────
+function makeMapSVG() {
+  return `<svg viewBox="0 0 600 280" xmlns="http://www.w3.org/2000/svg"
+           style="width:100%;height:auto;display:block;">
+    <rect width="600" height="280" fill="#221a10"/>
+    <line x1="0" y1="70"  x2="600" y2="70"  stroke="#3d3020" stroke-width="6"/>
+    <line x1="0" y1="140" x2="600" y2="140" stroke="#3d3020" stroke-width="10"/>
+    <line x1="0" y1="200" x2="600" y2="200" stroke="#3d3020" stroke-width="6"/>
+    <line x1="0" y1="250" x2="600" y2="250" stroke="#3d3020" stroke-width="4"/>
+    <line x1="80"  y1="0" x2="80"  y2="280" stroke="#3d3020" stroke-width="4"/>
+    <line x1="180" y1="0" x2="180" y2="280" stroke="#3d3020" stroke-width="8"/>
+    <line x1="320" y1="0" x2="320" y2="280" stroke="#3d3020" stroke-width="6"/>
+    <line x1="440" y1="0" x2="440" y2="280" stroke="#3d3020" stroke-width="4"/>
+    <line x1="540" y1="0" x2="540" y2="280" stroke="#3d3020" stroke-width="4"/>
+    <line x1="0" y1="180" x2="600" y2="80"  stroke="#3d3020" stroke-width="7"/>
+    <rect x="85"  y="75"  width="90"  height="60"  fill="#2a2015" rx="2"/>
+    <rect x="85"  y="145" width="90"  height="50"  fill="#2a2015" rx="2"/>
+    <rect x="185" y="75"  width="130" height="60"  fill="#2a2015" rx="2"/>
+    <rect x="185" y="145" width="130" height="50"  fill="#2a2015" rx="2"/>
+    <rect x="325" y="75"  width="110" height="60"  fill="#2a2015" rx="2"/>
+    <rect x="325" y="145" width="110" height="50"  fill="#2a2015" rx="2"/>
+    <rect x="445" y="75"  width="90"  height="120" fill="#2a2015" rx="2"/>
+    <text x="190" y="135" fill="#5a4a35" font-size="9" font-family="sans-serif">N Mississippi Ave</text>
+    <text x="325" y="135" fill="#5a4a35" font-size="9" font-family="sans-serif">N Williams Ave</text>
+    <text x="20"  y="138" fill="#5a4a35" font-size="9" font-family="sans-serif">N Fremont St</text>
+  </svg>`;
+}
+
+// ── SCENARIO 2: Location Search ──────────────────────────────────
+const LOCATIONS = [
+  { name: 'Pearl Vision', dist: '0.4 mi', stars: 4.2, hours: 'Open until 6pm',
+    x: '28%', y: '38%' },
+  { name: 'Northwest Eye Care', dist: '0.8 mi', stars: 4.5, hours: 'Open until 7pm',
+    x: '52%', y: '55%' },
+  { name: 'Vision Works NoPo', dist: '1.1 mi', stars: 3.9, hours: 'Open until 5:30pm',
+    x: '72%', y: '35%' },
+];
+
+async function scenario2() {
+  const zone2 = document.getElementById('zone2');
+  const zone3 = document.getElementById('zone3');
+  zone2.classList.add('active');
+
+  agentSpeech('Searching North Portland...');
+  await delay(400);
+  await thinkingSequence('Searching Portland...');
+
+  const mapPanel = document.createElement('div');
+  mapPanel.className = 'panel';
+  mapPanel.style.padding = '0';
+  mapPanel.style.overflow = 'hidden';
+  mapPanel.innerHTML = `<div class="map-container">${makeMapSVG()}</div>`;
+  zone2.appendChild(mapPanel);
+  await birth(mapPanel);
+
+  const mapContainer = mapPanel.querySelector('.map-container');
+  const pinEls = [];
+
+  for (let i = 0; i < LOCATIONS.length; i++) {
+    const loc = LOCATIONS[i];
+    const pin = document.createElement('div');
+    pin.className = 'map-pin';
+    pin.style.left = loc.x;
+    pin.style.top  = loc.y;
+    pin.dataset.idx = i;
+    mapContainer.appendChild(pin);
+    await birth(pin, i * 200);
+    pinEls.push(pin);
+  }
+
+  const cardEls = [];
+  for (let i = 0; i < LOCATIONS.length; i++) {
+    const loc = LOCATIONS[i];
+    const card = document.createElement('div');
+    card.className = 'shelf-card';
+    card.dataset.idx = i;
+    card.innerHTML = `
+      <div class="card-label">${loc.name}</div>
+      <div class="card-sub">${loc.dist} · ${loc.stars}★</div>
+    `;
+    zone3.appendChild(card);
+
+    gsap.fromTo(card,
+      { opacity: 0, filter: 'blur(8px)', scale: 0.9 },
+      { opacity: 0.3, filter: 'blur(0px)', scale: 1,
+        duration: 0.4, delay: i * 0.15, ease: 'power3.out',
+        onComplete: () => card.classList.add('live') }
+    );
+    cardEls.push(card);
+  }
+
+  agentSpeech('Here are three options near you.');
+
+  function selectLocation(idx) {
+    pinEls.forEach((p, i) => {
+      p.classList.toggle('dim', i !== idx);
+      p.classList.toggle('sel', i === idx);
+    });
+    cardEls.forEach((c, i) => {
+      c.style.opacity = i === idx ? '1' : '0.2';
+    });
+    const loc = LOCATIONS[idx];
+    agentSpeech(`${loc.name} — ${loc.stars} stars. ${loc.hours}.`);
+  }
+
+  pinEls.forEach(pin => {
+    pin.addEventListener('click', () => selectLocation(parseInt(pin.dataset.idx)));
+  });
+  cardEls.forEach(card => {
+    card.addEventListener('click', () => selectLocation(parseInt(card.dataset.idx)));
+  });
+}
+
+// ── SVG: Transformer Architecture Diagram ────────────────────────
+function makeTransformerSVG() {
+  const box = (x, y, w, h, label, sub = '') => `
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6"
+          fill="${sub ? '#362b1e' : '#2a2015'}"
+          stroke="var(--accent)" stroke-width="0.8" stroke-opacity="0.4"/>
+    <text x="${x + w/2}" y="${y + h/2 - (sub ? 5 : 0)}"
+          text-anchor="middle" dominant-baseline="middle"
+          fill="#ede8df" font-size="10" font-family="sans-serif"
+          font-weight="300">${label}</text>
+    ${sub ? `<text x="${x + w/2}" y="${y + h/2 + 10}"
+          text-anchor="middle" dominant-baseline="middle"
+          fill="#7a6f62" font-size="8" font-family="sans-serif">×${sub}</text>` : ''}`;
+
+  const arrow = (x1, y1, x2, y2) => `
+    <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"
+          stroke="#7a6f62" stroke-width="0.8" stroke-opacity="0.6"
+          marker-end="url(#arr)"/>`;
+
+  return `<svg viewBox="0 0 560 300" xmlns="http://www.w3.org/2000/svg"
+           style="width:100%;height:auto;display:block;">
+    <defs>
+      <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#7a6f62" fill-opacity="0.6"/>
+      </marker>
+    </defs>
+    <rect width="560" height="300" fill="#221a10" rx="8"/>
+    ${box(20, 130, 80, 40, 'Input')}
+    ${arrow(100, 150, 130, 150)}
+    ${box(130, 120, 80, 60, 'Embed', '+')}
+    ${arrow(210, 150, 240, 150)}
+    <rect x="240" y="60" width="120" height="180" rx="8"
+          fill="none" stroke="var(--accent)" stroke-width="0.8" stroke-opacity="0.25"
+          stroke-dasharray="4 3"/>
+    <text x="300" y="52" text-anchor="middle"
+          fill="#7a6f62" font-size="8" font-family="sans-serif">N× Encoder</text>
+    ${box(255, 75, 90, 36, 'Multi-Head', 'Attn')}
+    ${box(255, 122, 90, 30, 'Add & Norm')}
+    ${box(255, 163, 90, 36, 'Feed', 'Forward')}
+    ${box(255, 210, 90, 30, 'Add & Norm')}
+    ${arrow(300, 111, 300, 122)}
+    ${arrow(300, 152, 300, 163)}
+    ${arrow(300, 199, 300, 210)}
+    ${arrow(360, 150, 390, 150)}
+    ${box(390, 120, 80, 60, 'Linear +', 'Softmax')}
+    ${arrow(470, 150, 500, 150)}
+    ${box(500, 130, 60, 40, 'Output')}
+  </svg>`;
+}
+
+// ── SCENARIO 3: On-the-fly Note ───────────────────────────────────
+const NOTE_LINES = [
+  'Transformers use self-attention',
+  'Replace RNNs — parallel processing',
+  '2017 — Vaswani et al.',
+  '"Attention Is All You Need"',
+];
+
+async function scenario3() {
+  const zone2 = document.getElementById('zone2');
+  const zone3 = document.getElementById('zone3');
+  zone2.classList.add('active');
+
+  const diagPanel = document.createElement('div');
+  diagPanel.className = 'panel';
+  diagPanel.style.padding = '0';
+  diagPanel.innerHTML = `
+    <div id="diag-wrap" style="border-radius:0.75rem;overflow:hidden;">
+      ${makeTransformerSVG()}
+    </div>
+    <h2 id="diag-title" style="padding:1rem 1.5rem 0.5rem;">Transformer Architecture</h2>
+  `;
+  zone2.appendChild(diagPanel);
+  await birth(diagPanel);
+  float(diagPanel);
+
+  const title = diagPanel.querySelector('#diag-title');
+  await delay(300);
+  title.classList.add('focused');
+  await delay(2000);
+  title.classList.remove('focused');
+
+  const speechEl = document.createElement('div');
+  speechEl.className = 'agent-speech';
+  speechEl.style.whiteSpace = 'normal';
+  speechEl.style.maxWidth = '580px';
+  speechEl.style.textAlign = 'center';
+  document.body.appendChild(speechEl);
+  gsap.to(speechEl, { opacity: 1, duration: 0.4 });
+
+  const speechText = 'Transformer architectures, introduced in 2017, replaced recurrent networks with attention mechanisms...';
+  await streamText(speechEl, speechText, 22);
+  await delay(1200);
+  gsap.to(speechEl, { opacity: 0, y: -8, duration: 0.4,
+    onComplete: () => speechEl.remove() });
+
+  await delay(400);
+
+  const noteShelfCard = document.createElement('div');
+  noteShelfCard.className = 'shelf-card';
+  noteShelfCard.innerHTML = `
+    <div class="card-label">📝 Take note</div>
+    <div class="card-sub">Tap to expand</div>
+  `;
+  zone3.appendChild(noteShelfCard);
+  gsap.fromTo(noteShelfCard,
+    { opacity: 0, filter: 'blur(8px)', scale: 0.9 },
+    { opacity: 0.3, filter: 'blur(0px)', scale: 1,
+      duration: 0.4, ease: 'power3.out' }
+  );
+
+  let noteExpanded = false;
+  const expandNote = async () => {
+    if (noteExpanded) return;
+    noteExpanded = true;
+    noteShelfCard.removeEventListener('click', expandNote);
+
+    gsap.to(diagPanel, { opacity: 0.4, duration: 0.5 });
+
+    const notepad = document.createElement('div');
+    notepad.className = 'notepad';
+    zone2.appendChild(notepad);
+
+    notepad.innerHTML = `
+      <h2 id="note-title" style="margin-bottom:1rem;">Notes</h2>
+      <div id="note-lines"></div>
+      <span class="cursor-blink"></span>
+    `;
+
+    const noteTitle = notepad.querySelector('#note-title');
+    const noteLines = notepad.querySelector('#note-lines');
+
+    gsap.fromTo(notepad,
+      { opacity: 0, filter: 'blur(8px)', scaleY: 0.6, y: 40 },
+      { opacity: 1, filter: 'blur(0px)', scaleY: 1, y: 0,
+        duration: 0.5, ease: 'power3.out' }
+    );
+    noteTitle.classList.add('focused');
+
+    await delay(500);
+
+    for (const line of NOTE_LINES) {
+      const lineEl = document.createElement('div');
+      lineEl.className = 'notepad-line';
+      noteLines.appendChild(lineEl);
+      gsap.to(lineEl, { opacity: 1, y: 0, duration: 0.3, ease: 'power2.out' });
+      await streamText(lineEl, line, 28);
+      await delay(300);
+    }
+
+    notepad.querySelector('.cursor-blink').remove();
+    await delay(600);
+    noteTitle.classList.remove('focused');
+
+    const doneBtn = document.createElement('button');
+    doneBtn.className = 'trigger';
+    doneBtn.style.marginTop = '1rem';
+    doneBtn.innerHTML = '<em>Okay, done.</em>';
+    notepad.appendChild(doneBtn);
+    gsap.fromTo(doneBtn, { opacity: 0 }, { opacity: 1, duration: 0.4 });
+
+    doneBtn.addEventListener('click', async () => {
+      gsap.to(notepad, {
+        scaleY: 0.6, y: 40, opacity: 0, filter: 'blur(8px)',
+        duration: 0.4, ease: 'power2.in',
+        onComplete: () => notepad.remove()
+      });
+
+      await delay(200);
+
+      gsap.to(noteShelfCard, { opacity: 1, duration: 0.3 });
+      gsap.to(noteShelfCard, { boxShadow: '0 0 16px var(--accent)', duration: 0.3 });
+      await delay(600);
+      gsap.to(noteShelfCard, { boxShadow: 'none', opacity: 0.3, duration: 0.8 });
+
+      gsap.to(diagPanel, { opacity: 1, duration: 0.6 });
+      agentSpeech('Note saved. Continuing...');
+    });
+  };
+
+  noteShelfCard.addEventListener('click', expandNote);
+  setTimeout(expandNote, 3000);
+}
   </script>
 </body>
 </html>
