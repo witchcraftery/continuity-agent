@@ -34,6 +34,12 @@
     }
     /* ── END THEME TOKENS ─────────────────────────────────────────── */
 
+    /* ── THEME C OVERRIDES ────────────────────────────────────────── */
+    /* Syne renders tighter than Fraunces — adjust letter-spacing and line-height */
+    body { letter-spacing: 0.01em; }
+    .panel h2 { letter-spacing: -0.01em; font-size: clamp(1rem, 1.8vw, 1.3rem); }
+    .trigger { letter-spacing: 0.02em; }
+
     /* ── RESET + BASE ─────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
