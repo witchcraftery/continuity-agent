@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Continuity Agent — Late Evening</title>
+
+  <!-- THEME A FONTS: Fraunces variable (wght 100-900, opsz, WONK) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&display=swap" rel="stylesheet" />
+
+  <!-- GSAP 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+
+  <style>
+    /* ── THEME TOKENS (A: Late Evening) ──────────────────────── */
+    :root {
+      --bg:         #1e1812;
+      --canvas:     #26211a;
+      --accent:     #c4622d;
+      --text:       #ede8df;
+      --text-dim:   #7a6f62;
+      --font:       'Fraunces', serif;
+      --wght-base:  300;
+      --wght-em:    500;
+      --birth-ms:   450;
+      --float-amp:  -5px;
+      --float-dur:  6s;
+      --think-dur:  2500;
+      --speech-dur: 3000;
+      --wght-ms:    800;
+    }
+    /* ── END THEME TOKENS ─────────────────────────────────────── */
+  </style>
+</head>
+<body>
+  <!-- ZONES -->
+  <div id="zone1"></div>
+  <div id="zone2"></div>
+  <div id="zone3"></div>
+
+  <!-- TRIGGER BAR -->
+  <div id="trigger-bar">
+    <button class="trigger" data-scenario="1">
+      <em>"Show me a corgi riding a unicycle at the circus"</em>
+    </button>
+    <button class="trigger" data-scenario="2">
+      <em>"Where can I get my glasses fixed in North Portland?"</em>
+    </button>
+    <button class="trigger" data-scenario="3">
+      <em>"Tell me about transformer architectures"</em>
+    </button>
+    <button id="reset-btn">×</button>
+  </div>
+
+  <script>
+    // engine goes here
+  </script>
+</body>
+</html>
