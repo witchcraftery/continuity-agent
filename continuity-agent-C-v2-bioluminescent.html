@@ -409,8 +409,7 @@
       </svg>
     </div>
   <div id="thinking-form">
-    <canvas id="lissajous-canvas" width="180" height="140"
-            style="display:block;"></canvas>
+    <canvas id="lissajous-canvas" width="280" height="220" style="display:block;"></canvas>
     <span id="thinking-label">Thinking...</span>
   </div>
   </div>
@@ -597,6 +596,20 @@ function applyGradientState(stateName, durationS = 2) {
 
 // Initialize gradient
 applyGradientState('idle');
+
+// ── AMBIENT GRADIENT PULSE (always running, very slow) ────────────
+(function ambientPulse() {
+  const dur = 18 + Math.random() * 8; // 18–26s
+  gsap.to(bgEl, {
+    '--g1x': `${28 + Math.random() * 8}%`,
+    '--g1y': `${38 + Math.random() * 8}%`,
+    '--g2x': `${70 + Math.random() * 10}%`,
+    '--g2y': `${60 + Math.random() * 8}%`,
+    duration: dur,
+    ease: 'sine.inOut',
+    onComplete: ambientPulse
+  });
+})();
 
 // ── WEB AUDIO ENGINE ──────────────────────────────────────────────
 const AudioEngine = (() => {
