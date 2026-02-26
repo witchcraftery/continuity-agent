@@ -60,7 +60,7 @@
       --canvas:     #20202d;
       --accent:     #e8a030;
       --text:       #f0ead8;
-      --text-dim:   #5a5245;
+      --text-dim:   #a08878;
       --map-bg:     #1a1510;
       --font:       'Syne', sans-serif;
       --wght-base:  400;
@@ -218,7 +218,7 @@
       cursor: pointer;
       transition: opacity 300ms ease;
     }
-    .shelf-card.live { opacity: 0.72; filter: blur(0px); }
+    .shelf-card.live { opacity: 0.9; filter: blur(0px); }
     .shelf-card.focused { opacity: 1 !important; filter: blur(0px); }
 
     .shelf-card .card-label {
@@ -1374,9 +1374,12 @@ async function saveToShelf(panel, label, zone3) {
 
   gsap.fromTo(card,
     { opacity: 0, filter: 'blur(8px)', scale: 0.9, y: 18 },
-    { opacity: 0.3, filter: 'blur(0px)', scale: 1, y: 0,
+    { opacity: 1, filter: 'blur(0px)', scale: 1, y: 0,
       duration: 0.4, ease: 'power3.out',
-      onComplete: () => card.classList.add('live') }
+      onComplete: () => {
+        gsap.set(card, { clearProps: 'opacity,filter' });
+        card.classList.add('live');
+      } }
   );
 
   agentSpeech('Saved.');
@@ -1473,9 +1476,12 @@ async function scenario2() {
 
     gsap.fromTo(card,
       { opacity: 0, filter: 'blur(8px)', scale: 0.9, y: 18 },
-      { opacity: 0.3, filter: 'blur(0px)', scale: 1, y: 0,
+      { opacity: 1, filter: 'blur(0px)', scale: 1, y: 0,
         duration: 0.4, delay: i * 0.15, ease: 'power3.out',
-        onComplete: () => card.classList.add('live') }
+        onComplete: () => {
+          gsap.set(card, { clearProps: 'opacity,filter' });
+          card.classList.add('live');
+        } }
     );
     cardEls.push(card);
   }
@@ -1613,8 +1619,9 @@ async function scenario3() {
   zone3.appendChild(noteShelfCard);
   gsap.fromTo(noteShelfCard,
     { opacity: 0, filter: 'blur(8px)', scale: 0.9, y: 18 },
-    { opacity: 0.3, filter: 'blur(0px)', scale: 1, y: 0,
-      duration: 0.4, ease: 'power3.out' }
+    { opacity: 1, filter: 'blur(0px)', scale: 1, y: 0,
+      duration: 0.4, ease: 'power3.out',
+      onComplete: () => gsap.set(noteShelfCard, { clearProps: 'opacity,filter' }) }
   );
 
   let noteExpanded = false;
