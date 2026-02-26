@@ -516,6 +516,83 @@ function drawOrb(timestamp) {
 
 requestAnimationFrame(drawOrb);
 
+// ── GRADIENT STATE MACHINE ────────────────────────────────────────
+const GRADIENT_PALETTES = {
+  idle: {
+    g1: 'rgba(12,8,20,0.9)',  g1x: '30%', g1y: '40%',
+    g2: 'rgba(20,14,8,0.8)',  g2x: '75%', g2y: '65%',
+    frost: '32px'
+  },
+  listening: {
+    g1: 'rgba(20,12,32,0.85)', g1x: '35%', g1y: '45%',
+    g2: 'rgba(28,16,8,0.75)', g2x: '70%', g2y: '60%',
+    frost: '36px'
+  },
+  thinking: {
+    g1: 'rgba(8,12,28,0.92)',  g1x: '25%', g1y: '35%',
+    g2: 'rgba(20,10,4,0.80)', g2x: '80%', g2y: '70%',
+    frost: '38px'
+  },
+  searching: {
+    g1: 'rgba(16,10,28,0.88)', g1x: '40%', g1y: '38%',
+    g2: 'rgba(24,14,6,0.78)', g2x: '68%', g2y: '62%',
+    frost: '34px'
+  },
+  building: {
+    g1: 'rgba(18,10,24,0.86)', g1x: '32%', g1y: '42%',
+    g2: 'rgba(22,14,6,0.76)', g2x: '72%', g2y: '58%',
+    frost: '34px'
+  },
+  speaking: {
+    g1: 'rgba(40,20,8,0.75)',  g1x: '38%', g1y: '42%',
+    g2: 'rgba(8,12,32,0.65)', g2x: '72%', g2y: '62%',
+    frost: '24px'
+  },
+  excited: {
+    g1: 'rgba(60,30,8,0.65)',  g1x: '42%', g1y: '44%',
+    g2: 'rgba(30,8,50,0.55)', g2x: '68%', g2y: '58%',
+    frost: '20px'
+  }
+};
+
+const bgEl    = document.getElementById('bg-gradient');
+const frostEl = document.getElementById('frost');
+let currentGradientState = 'idle';
+
+function applyGradientState(stateName, durationS = 2) {
+  const p = GRADIENT_PALETTES[stateName] || GRADIENT_PALETTES.idle;
+  currentGradientState = stateName;
+
+  // Tween position vars (GSAP can handle % values)
+  gsap.to(bgEl, {
+    duration: durationS,
+    ease: 'power1.inOut',
+    '--g1x': p.g1x, '--g1y': p.g1y,
+    '--g2x': p.g2x, '--g2y': p.g2y,
+  });
+
+  // Tween frost blur
+  gsap.to(frostEl, {
+    duration: durationS,
+    ease: 'power1.inOut',
+    '--frost-blur': p.frost
+  });
+
+  // Color stops can't tween via GSAP CSS vars without plugin — update instantly
+  bgEl.style.setProperty('--g1', p.g1);
+  bgEl.style.setProperty('--g2', p.g2);
+
+  // Orb energy
+  const energyMap = {
+    idle: 0, listening: 0.1, thinking: 0.2, searching: 0.3,
+    building: 0.3, speaking: 0.7, excited: 0.9
+  };
+  gsap.to(orbState, { energy: energyMap[stateName] ?? 0, duration: durationS });
+}
+
+// Initialize gradient
+applyGradientState('idle');
+
     // ── THINKING FORM ────────────────────────────────────────────────
     const thinkingForm = document.getElementById('thinking-form');
     const thinkLabel   = document.getElementById('thinking-label');
