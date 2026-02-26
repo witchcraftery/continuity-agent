@@ -415,7 +415,12 @@
   </div>
   </div>
   <div id="zone2"></div>
-  <div id="zone3"></div>
+  <div id="zone3">
+    <div id="notepad-shelf-card" class="shelf-card live" style="cursor:pointer;">
+      <div class="card-label">📝 Session Notes</div>
+      <div class="card-sub" id="notepad-line-count">0 lines</div>
+    </div>
+  </div>
 
   <!-- TRIGGER BAR -->
   <div id="trigger-bar">
@@ -1021,6 +1026,140 @@ async function streamText(container, text, msPerChar = 18) {
     await delay(msPerChar);
   }
 }
+
+
+// ── NOTEPAD TOOL ──────────────────────────────────────────────────
+const NotepadTool = (() => {
+  const STORAGE_KEY = `continuity-notes-${new Date().toISOString().slice(0,10)}`;
+  let lines   = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  let panelEl = null;
+  let isOpen  = false;
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lines));
+    const countEl = document.getElementById('notepad-line-count');
+    if (countEl) countEl.textContent = `${lines.length} line${lines.length !== 1 ? 's' : ''}`;
+  }
+
+  function buildPanel() {
+    const zone2 = document.getElementById('zone2');
+    panelEl = document.createElement('div');
+    panelEl.className = 'notepad';
+    panelEl.id = 'notepad-panel';
+
+    panelEl.innerHTML = `
+      <h2 id="notepad-title">Session Notes
+        <button id="notepad-export" style="float:right;background:none;border:1px solid rgba(255,255,255,0.12);
+          border-radius:1rem;padding:0.25rem 0.75rem;color:var(--text-dim);font-family:var(--font);
+          font-size:0.65rem;cursor:pointer;transition:color 200ms ease;">Save as .md</button>
+      </h2>
+      <div id="notepad-lines" contenteditable="true"
+           style="outline:none;min-height:80px;font-size:0.88rem;line-height:1.9;color:var(--text);">
+        ${lines.map(l => `<div>${l}</div>`).join('')}
+      </div>
+      <span class="cursor-blink"></span>
+    `;
+
+    zone2.appendChild(panelEl);
+
+    // Sync edits to storage
+    const linesEl = panelEl.querySelector('#notepad-lines');
+    linesEl.addEventListener('input', () => {
+      const divs = [...linesEl.querySelectorAll('div')].map(d => d.textContent);
+      lines = divs.length ? divs : [linesEl.textContent];
+      save();
+    });
+
+    panelEl.querySelector('#notepad-export').addEventListener('click', exportMarkdown);
+    return panelEl;
+  }
+
+  function open() {
+    if (isOpen) return;
+    isOpen = true;
+
+    const zone2 = document.getElementById('zone2');
+    zone2.classList.add('active');
+
+    if (!panelEl) buildPanel();
+
+    gsap.set(panelEl, { transformOrigin: 'bottom center' });
+    gsap.fromTo(panelEl,
+      { opacity: 0, filter: 'blur(8px)', scaleY: 0.05, y: 120 },
+      { opacity: 1, filter: 'blur(0px)', scaleY: 1,    y: 0,
+        duration: 0.6, ease: 'power3.out' }
+    );
+    float(panelEl);
+
+    const title = panelEl.querySelector('h2');
+    title.classList.add('focused');
+    setTimeout(() => title.classList.remove('focused'), 2000);
+
+    if (window.ContinuityAgent) {
+      window.ContinuityAgent.setState('thinking');
+      setTimeout(() => window.ContinuityAgent.setState('idle'), 1000);
+    }
+  }
+
+  function close() {
+    if (!isOpen || !panelEl) return;
+    isOpen = false;
+
+    gsap.set(panelEl, { transformOrigin: 'bottom center' });
+    gsap.to(panelEl, {
+      scaleY: 0.05, y: 120, opacity: 0, filter: 'blur(8px)',
+      duration: 0.45, ease: 'power2.in',
+      onComplete: () => { panelEl.remove(); panelEl = null; }
+    });
+
+    const shelfCard = document.getElementById('notepad-shelf-card');
+    if (shelfCard) {
+      gsap.to(shelfCard, { opacity: 1, boxShadow: '0 0 16px var(--accent)', duration: 0.3 });
+      setTimeout(() => gsap.to(shelfCard, { opacity: 0.3, boxShadow: 'none', duration: 0.8 }), 800);
+    }
+  }
+
+  function appendLine(text) {
+    lines.push(text);
+    save();
+    if (!isOpen) open();
+
+    setTimeout(() => {
+      if (!panelEl) return;
+      const linesEl = panelEl.querySelector('#notepad-lines');
+      if (!linesEl) return;
+      const lineEl = document.createElement('div');
+      linesEl.appendChild(lineEl);
+      gsap.fromTo(lineEl, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3 });
+      if (typeof streamText === 'function') {
+        streamText(lineEl, text, 28);
+      } else {
+        lineEl.textContent = text;
+      }
+    }, 100);
+  }
+
+  function exportMarkdown() {
+    const date = new Date().toISOString().slice(0,10);
+    const md   = `# Session Notes — ${date}\n\n` + lines.map(l => `- ${l}`).join('\n');
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `${date}-session-notes.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Wire shelf card toggle after DOM ready
+  setTimeout(() => {
+    const shelfCard = document.getElementById('notepad-shelf-card');
+    if (shelfCard) shelfCard.addEventListener('click', () => isOpen ? close() : open());
+    save(); // update line count display on load
+  }, 100);
+
+  return { open, close, appendLine, exportMarkdown };
+})();
 
 // ── TRIGGER WIRING ────────────────────────────────────────────────
 let running = false;
