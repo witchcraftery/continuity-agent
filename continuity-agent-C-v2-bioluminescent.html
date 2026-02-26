@@ -436,6 +436,11 @@
   </div>
 
   <script>
+    // ── GSAP BACKGROUND-TAB KEEPALIVE ────────────────────────────────
+    // GSAP 3 pauses its ticker when document.hidden = true. This keeps
+    // animations running in preview environments and when tabs are backgrounded.
+    setInterval(() => { if (document.hidden) gsap.ticker.tick(); }, 16);
+
     // ── ORB CANVAS SETUP ─────────────────────────────────────────────
 const orbCanvas = document.getElementById('orb-canvas');
 const orbCtx    = orbCanvas.getContext('2d');
