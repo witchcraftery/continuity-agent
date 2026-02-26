@@ -945,6 +945,7 @@ async function clearAll() {
   ];
   const promises = els.map((el, i) => death(el, i * 80));
   await Promise.all(promises);
+  ContinuityAgent.setState('idle');
 }
 
 // ── UTILITY ───────────────────────────────────────────────────────
@@ -1244,10 +1245,12 @@ async function scenario1() {
   const zone3 = document.getElementById('zone3');
   zone2.classList.add('active');
 
+  ContinuityAgent.setState('thinking');
   agentSpeech('Creating that for you...');
   await delay(400);
   await thinkingSequence('Imagining...');
 
+  ContinuityAgent.setState('building');
   const panel = document.createElement('div');
   panel.className = 'panel';
   panel.innerHTML = `<div id="corgi-img">${makeCorgSVG()}</div>`;
@@ -1261,6 +1264,7 @@ async function scenario1() {
   panel.appendChild(caption);
   await birth(caption, 300);
 
+  ContinuityAgent.setState('idle');
   await delay(200);
   agentSpeech("Here's your corgi. Three months of training, apparently.");
 
@@ -1353,8 +1357,10 @@ async function scenario2() {
   const zone3 = document.getElementById('zone3');
   zone2.classList.add('active');
 
+  ContinuityAgent.setState('thinking');
   agentSpeech('Searching North Portland...');
   await delay(400);
+  ContinuityAgent.setState('searching');
   await thinkingSequence('Searching Portland...');
 
   const mapPanel = document.createElement('div');
@@ -1363,6 +1369,7 @@ async function scenario2() {
   mapPanel.style.overflow = 'hidden';
   mapPanel.innerHTML = `<div class="map-container">${makeMapSVG()}</div>`;
   zone2.appendChild(mapPanel);
+  ContinuityAgent.setState('building');
   await birth(mapPanel);
 
   const mapContainer = mapPanel.querySelector('.map-container');
@@ -1401,6 +1408,7 @@ async function scenario2() {
     cardEls.push(card);
   }
 
+  ContinuityAgent.setState('idle');
   agentSpeech('Here are three options near you.');
 
   function selectLocation(idx) {
@@ -1486,6 +1494,7 @@ async function scenario3() {
   const zone3 = document.getElementById('zone3');
   zone2.classList.add('active');
 
+  ContinuityAgent.setState('building');
   const diagPanel = document.createElement('div');
   diagPanel.className = 'panel';
   diagPanel.style.padding = '0';
@@ -1505,6 +1514,7 @@ async function scenario3() {
   await delay(2000);
   title.classList.remove('focused');
 
+  ContinuityAgent.setState('speaking');
   const speechEl = document.createElement('div');
   speechEl.className = 'agent-speech';
   speechEl.style.whiteSpace = 'normal';
@@ -1519,6 +1529,7 @@ async function scenario3() {
   gsap.to(speechEl, { opacity: 0, y: -8, duration: 0.4,
     onComplete: () => speechEl.remove() });
 
+  ContinuityAgent.setState('idle');
   await delay(400);
 
   const noteShelfCard = document.createElement('div');
