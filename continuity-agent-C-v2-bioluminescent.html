@@ -678,40 +678,111 @@ document.addEventListener('keydown', () => AudioEngine.initMic(), { once: true }
     const thinkLabel   = document.getElementById('thinking-label');
 
     // ── THEME C: Lissajous dot-trail thinking form ───────────────────
-const lissCanvas  = document.getElementById('lissajous-canvas');
-const lissCtx     = lissCanvas.getContext('2d');
-const CX = lissCanvas.width  / 2;
-const CY = lissCanvas.height / 2;
-const A  = 72, B = 52;
-const a  = 3,  b = 2;
-let   lissT = 0;
-const TRAIL_LENGTH = 40;
+// ── LISSAJOUS v2 — STATE MACHINE + AUDIO REACTIVE ────────────────
+const lissCanvas = document.getElementById('lissajous-canvas');
+const lissCtx    = lissCanvas.getContext('2d');
+const LISS_CX    = lissCanvas.width  / 2;
+const LISS_CY    = lissCanvas.height / 2;
+
+// Lissajous state configs
+const LISS_STATES = {
+  idle:      { a: 1, b: 1, A: 60, B: 48, tail: 30, color: [232,160,48],  alpha: 0.4, glow: false, speed: 0.012 },
+  listening: { a: 1, b: 1, A: 58, B: 46, tail: 25, color: [240,235,220], alpha: 0.5, glow: false, speed: 0.010 },
+  thinking:  { a: 3, b: 2, A: 68, B: 50, tail: 40, color: [232,160,48],  alpha: 0.6, glow: true,  speed: 0.018 },
+  searching: { a: 5, b: 4, A: 65, B: 48, tail: 35, color: [232,160,48],  alpha: 0.7, glow: true,  speed: 0.022 },
+  building:  { a: 4, b: 3, A: 62, B: 50, tail: 38, color: [232,160,48],  alpha: 0.65,glow: true,  speed: 0.020 },
+  speaking:  { a: 2, b: 1, A: 70, B: 52, tail: 70, color: [232,160,48],  alpha: 0.9, glow: true,  speed: 0.016 },
+  excited:   { a: 3, b: 2, A: 72, B: 54, tail: 80, color: [248,180,60],  alpha: 1.0, glow: true,  speed: 0.024 },
+};
+
+// Current interpolated values (tweened by GSAP)
+const lissConfig = {
+  a: 1, b: 1, A: 60, B: 48,
+  tailLive: 30, alpha: 0.4, speed: 0.012,
+  color: [232,160,48], glow: false
+};
+let lissT = 0;
 const trail = [];
+
+function setLissajousState(stateName, durationS = 0.8) {
+  const target = LISS_STATES[stateName] || LISS_STATES.idle;
+  gsap.to(lissConfig, {
+    a: target.a, b: target.b,
+    A: target.A, B: target.B,
+    tailLive: target.tail,
+    alpha: target.alpha,
+    speed: target.speed,
+    duration: durationS,
+    ease: 'power2.inOut'
+  });
+  lissConfig.color = target.color;
+  lissConfig.glow  = target.glow;
+}
 
 function drawLissajous() {
   lissCtx.clearRect(0, 0, lissCanvas.width, lissCanvas.height);
 
-  lissT += 0.018;
-  const x = CX + A * Math.sin(a * lissT + Math.PI / 2);
-  const y = CY + B * Math.sin(b * lissT);
-  trail.push({ x, y });
-  if (trail.length > TRAIL_LENGTH) trail.shift();
+  lissT += lissConfig.speed;
 
+  // Get amplitude sources
+  const aiAmp   = AudioEngine.aiAmp;
+  const userAmp = AudioEngine.getUserAmplitude();
+  const isSpeaking     = aiAmp > 0.05;
+  const isUserSpeaking = userAmp > 0.04 && !isSpeaking;
+
+  // Parametric Lissajous position
+  const phase = Math.PI / 2;
+  let x = LISS_CX + lissConfig.A * Math.sin(lissConfig.a * lissT + phase);
+  let y = LISS_CY + lissConfig.B * Math.sin(lissConfig.b * lissT);
+
+  // Path deformation during AI speaking — organic waveform wobble
+  if (isSpeaking) {
+    const t = lissT;
+    x += aiAmp * Math.sin(t * 3.7) * 14;
+    y += aiAmp * Math.cos(t * 2.9) * 9;
+  }
+
+  // Subtle user-speaking bumps
+  if (isUserSpeaking) {
+    x += userAmp * Math.sin(lissT * 5.1) * 6;
+    y += userAmp * Math.cos(lissT * 4.3) * 4;
+  }
+
+  trail.push({ x, y });
+  const maxTail = Math.round(lissConfig.tailLive + (isSpeaking ? aiAmp * 40 : 0));
+  while (trail.length > maxTail) trail.shift();
+
+  // Color: near-white for user speaking, amber for AI
+  const [r, g, b] = isUserSpeaking ? [240, 235, 220] : lissConfig.color;
+
+  // Draw trail (comet-tail dot cloud)
   for (let i = 0; i < trail.length; i++) {
     const pt       = trail[i];
     const progress = i / trail.length;
-    const alpha    = progress * progress * 0.7;
-    const radius   = 1 + progress * 2.5;
+    const alpha    = progress * progress * lissConfig.alpha;
+    const radius   = 0.8 + progress * 2.8 + (isSpeaking ? aiAmp * progress * 1.5 : 0);
+
     lissCtx.beginPath();
     lissCtx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
-    lissCtx.fillStyle = `rgba(232, 160, 48, ${alpha})`;
+    lissCtx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
     lissCtx.fill();
   }
 
+  // Head dot with conditional glow
+  if (lissConfig.glow && isSpeaking) {
+    lissCtx.shadowBlur  = 12 + aiAmp * 14;
+    lissCtx.shadowColor = `rgba(${r},${g},${b},0.85)`;
+  } else {
+    lissCtx.shadowBlur  = 0;
+    lissCtx.shadowColor = 'transparent';
+  }
+
+  const headR = 2.5 + (isSpeaking ? aiAmp * 2 : 0);
   lissCtx.beginPath();
-  lissCtx.arc(x, y, 3.5, 0, Math.PI * 2);
-  lissCtx.fillStyle = 'rgba(232, 160, 48, 0.9)';
+  lissCtx.arc(x, y, headR, 0, Math.PI * 2);
+  lissCtx.fillStyle = `rgba(${r},${g},${b},${0.8 + aiAmp * 0.2})`;
   lissCtx.fill();
+  lissCtx.shadowBlur = 0;
 
   requestAnimationFrame(drawLissajous);
 }
