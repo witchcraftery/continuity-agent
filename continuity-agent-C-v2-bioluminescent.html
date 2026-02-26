@@ -1011,15 +1011,10 @@ async function clearAll() {
   // Preserve the persistent notepad shelf card — only remove dynamically added zone3 children
   const zone3Kids = [...zone3.children].filter(el => el.id !== 'notepad-shelf-card');
 
-  const els = [
-    ...zone2.children,
-    ...zone3Kids,
-    ...speech
-  ];
   const promises = [
     ...[...zone2.children].map((el, i) => death(el, i * 80)),
     ...zone3Kids.map((el, i) => deathDown(el, i * 60)),
-    ...speech.map(el => death(el, 0))
+    ...[...speech].map(el => death(el, 0))
   ];
   await Promise.all(promises);
   ContinuityAgent.setState('idle');
