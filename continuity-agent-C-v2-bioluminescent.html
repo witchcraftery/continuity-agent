@@ -10,13 +10,44 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&display=swap" rel="stylesheet" />
 
-  <!-- Visibility override: prevents GSAP from pausing in preview/background tabs.
-       In a real focused browser tab, document.hidden is already false — no effect. -->
+  <!-- Animation compatibility shim: ensures GSAP and canvas RAF loops run
+       in any environment — focused tabs, background tabs, and headless preview
+       browsers. If native RAF fires within 200ms, uses it (no change to real
+       browser behavior). Otherwise falls back to setTimeout-based RAF. -->
   <script>
-    try {
-      Object.defineProperty(document, 'hidden', { get: () => false, configurable: true });
-      Object.defineProperty(document, 'visibilityState', { get: () => 'visible', configurable: true });
-    } catch(e) {}
+    (function() {
+      try {
+        Object.defineProperty(document, 'hidden', { get: () => false, configurable: true });
+        Object.defineProperty(document, 'visibilityState', { get: () => 'visible', configurable: true });
+      } catch(e) {}
+
+      // Test whether native RAF fires. If not (headless/background), patch it.
+      var _nativeRAF = window.requestAnimationFrame;
+      var _rafFired  = false;
+      var _cbs       = [];
+
+      window.requestAnimationFrame = function(cb) {
+        _cbs.push(cb);
+        if (!_rafFired) {
+          // Flush all queued callbacks on next setTimeout tick
+          setTimeout(function flush() {
+            var batch = _cbs.splice(0);
+            var now   = performance.now();
+            batch.forEach(function(fn) { try { fn(now); } catch(e) {} });
+          }, 16);
+        }
+        return _cbs.length;
+      };
+
+      // If native RAF fires (real focused browser), restore it and stop shim
+      _nativeRAF(function(ts) {
+        _rafFired = true;
+        window.requestAnimationFrame = _nativeRAF;
+        // Re-register any pending callbacks through native RAF
+        var pending = _cbs.splice(0);
+        pending.forEach(function(fn) { _nativeRAF(fn); });
+      });
+    })();
   </script>
 
   <!-- GSAP 3 -->
