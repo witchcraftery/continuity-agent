@@ -789,6 +789,91 @@ function drawLissajous() {
 
 drawLissajous();
 
+// ── AGENT API SURFACE ─────────────────────────────────────────────
+// Plug-in door: a real agent (Claude API, OpenClaw, etc.) calls these
+// methods to drive the entire visual + audio experience.
+window.ContinuityAgent = {
+
+  // Drive all visual layers simultaneously
+  setState(state) {
+    applyGradientState(state, 2);
+    setLissajousState(state, 0.8);
+    console.log('[ContinuityAgent] State:', state);
+  },
+
+  // Text-to-speech + speaking visual state
+  speak(text, emotion = 'neutral') {
+    const estDurationMs = Math.max(1500, text.length * 45);
+
+    this.setState('speaking');
+    AudioEngine.startAISpeaking(estDurationMs);
+
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate   = 0.92;
+    utt.pitch  = 0.95;
+    utt.volume = 1;
+
+    // Prefer a natural-sounding voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v =>
+      v.name.includes('Samantha') || v.name.includes('Daniel') ||
+      v.name.includes('Karen')    || v.name.includes('Moira')
+    );
+    if (preferred) utt.voice = preferred;
+
+    window.speechSynthesis.cancel(); // clear any queued speech
+
+    return new Promise(resolve => {
+      utt.onend = () => {
+        AudioEngine.stopAISpeaking();
+        this.setState('listening');
+        resolve();
+      };
+      window.speechSynthesis.speak(utt);
+    });
+  },
+
+  // Drop a content card into zone 2
+  addContent(type, data) {
+    const zone2 = document.getElementById('zone2');
+    zone2.classList.add('active');
+    this.setState('thinking');
+
+    const panel = document.createElement('div');
+    panel.className = 'panel';
+
+    if (type === 'note' || type === 'custom') {
+      panel.innerHTML = `<h2>${data.title || 'Note'}</h2>
+        <div style="font-size:0.9rem;color:var(--text);line-height:1.8;">${data.body || ''}</div>`;
+    } else {
+      panel.innerHTML = `<h2>${data.title || type}</h2>
+        <div style="color:var(--text-dim);font-size:0.85rem;">${data.body || ''}</div>`;
+    }
+
+    zone2.appendChild(panel);
+    birth(panel).then(() => {
+      float(panel);
+      this.setState('idle');
+    });
+  },
+
+  // Add a line to the persistent notepad
+  appendNote(text) {
+    if (typeof NotepadTool !== 'undefined') {
+      NotepadTool.appendLine(text);
+    }
+  },
+
+  // Reset all content
+  clearAll() {
+    clearAll();
+    this.setState('idle');
+  }
+};
+
+// Preload voices (browsers need a trigger to populate the list)
+window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+
 // ── LIFECYCLE: birth / float / death ────────────────────────────
 const BIRTH_MS = parseInt(getComputedStyle(document.documentElement)
                    .getPropertyValue('--birth-ms')) || 450;
