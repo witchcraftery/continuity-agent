@@ -113,7 +113,7 @@
     }
 
     #zone1 {
-      top: 68px;
+      top: 104px;   /* 68px trigger-bar + 36px state-bar */
       height: 38vh;
       display: flex;
       flex-direction: column;
@@ -123,7 +123,7 @@
     }
 
     #zone2 {
-      top: calc(68px + 38vh);
+      top: calc(104px + 38vh);
       height: 46vh;
       display: flex;
       flex-direction: column;
@@ -144,13 +144,14 @@
     }
     #zone3::-webkit-scrollbar { display: none; }
 
-    /* Canvas background glow on zone2 */
+    /* Subtle zone2 ambient shadow — no fill, just a soft vignette depth cue */
     #zone2::before {
       content: '';
       position: absolute;
       inset: -2rem;
-      background: var(--canvas);
+      background: transparent;
       border-radius: 1.5rem;
+      box-shadow: inset 0 0 60px rgba(0,0,0,0.18);
       opacity: 0;
       transition: opacity 600ms ease;
       z-index: -1;
@@ -354,13 +355,118 @@
     }
     #reset-btn:hover { color: var(--text); }
 
+    /* ── EMOTION STATE HUD ────────────────────────────────────────── */
+    #state-bar {
+      position: fixed;
+      top: 68px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.35rem;
+      z-index: 199;
+      padding: 0.45rem 0 0.55rem;
+      width: min(900px, 92vw);
+      justify-content: center;
+    }
+    .state-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 100px;
+      color: var(--text-dim);
+      font-size: 0.6rem;
+      font-family: var(--font);
+      font-variation-settings: 'wght' 400;
+      letter-spacing: 0.04em;
+      padding: 0.2rem 0.65rem;
+      cursor: pointer;
+      transition: background 200ms, color 200ms, border-color 200ms;
+      white-space: nowrap;
+    }
+    .state-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    .state-btn.active {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.2);
+      color: var(--text);
+    }
+
+    /* ── UNIVERSAL CARD ───────────────────────────────────────────── */
+    .card {
+      background: var(--canvas);
+      border-radius: 1rem;
+      width: 100%;
+      max-width: 680px;
+      overflow: hidden;
+      opacity: 0;
+      filter: blur(10px);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 1.1rem 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .card-title {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-variation-settings: 'wght' 500;
+      letter-spacing: 0.03em;
+    }
+    .card-controls {
+      display: flex;
+      gap: 0.2rem;
+    }
+    .card-btn {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-family: sans-serif;
+      font-size: 0.95rem;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      opacity: 0.45;
+      transition: opacity 150ms, background 150ms;
+    }
+    .card-btn:hover { opacity: 1; background: rgba(255,255,255,0.08); }
+    .card-content {
+      padding: 1.1rem 1.4rem 1.3rem;
+    }
+
+    /* Markdown styles inside .card-content */
+    .card-content h1, .card-content h2, .card-content h3 {
+      color: var(--text);
+      font-variation-settings: 'wght' 600;
+      margin: 0 0 0.5rem;
+    }
+    .card-content h2 { font-size: 1.1rem; }
+    .card-content h3 { font-size: 0.9rem; color: var(--text-dim); }
+    .card-content p  { color: var(--text-dim); font-size: 0.85rem; line-height: 1.7; margin: 0 0 0.6rem; }
+    .card-content ul { padding-left: 1.2rem; margin: 0 0 0.6rem; }
+    .card-content li { color: var(--text-dim); font-size: 0.85rem; line-height: 1.6; }
+    .card-content code {
+      background: rgba(255,255,255,0.07);
+      border-radius: 3px;
+      padding: 0.1em 0.35em;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8em;
+      color: var(--text);
+    }
+    .card-content strong { color: var(--text); font-variation-settings: 'wght' 600; }
+    .card-content em { font-style: italic; }
+
     /* ── THINKING FORM WRAPPER ────────────────────────────────────── */
     #thinking-form {
-      opacity: 0;
+      opacity: 0.3;           /* always softly visible — brightens when active */
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 1rem;
+      transition: opacity 600ms ease;
     }
     #thinking-label {
       font-style: italic;
@@ -474,6 +580,17 @@
       <em>"Tell me about transformer architectures"</em>
     </button>
     <button id="reset-btn">×</button>
+  </div>
+
+  <!-- EMOTION STATE HUD — click any pill to preview that gradient state -->
+  <div id="state-bar">
+    <button class="state-btn active" data-state="idle">idle</button>
+    <button class="state-btn" data-state="listening">listening</button>
+    <button class="state-btn" data-state="thinking">thinking</button>
+    <button class="state-btn" data-state="searching">searching</button>
+    <button class="state-btn" data-state="building">building</button>
+    <button class="state-btn" data-state="speaking">speaking</button>
+    <button class="state-btn" data-state="excited">excited</button>
   </div>
 
   <script>
@@ -916,7 +1033,6 @@ window.ContinuityAgent = {
 
     zone2.appendChild(panel);
     birth(panel).then(() => {
-      float(panel);
       this.setState('idle');
     });
   },
@@ -945,9 +1061,9 @@ const BIRTH_MS = parseInt(getComputedStyle(document.documentElement)
 function birth(el, delay = 0) {
   return new Promise(resolve => {
     gsap.fromTo(el,
-      { opacity: 0, filter: 'blur(12px)', scale: 0.95 },
+      { opacity: 0, filter: 'blur(10px)', scale: 0.97, y: 22 },
       {
-        opacity: 1, filter: 'blur(0px)', scale: 1,
+        opacity: 1, filter: 'blur(0px)', scale: 1, y: 0,
         duration: BIRTH_MS / 1000,
         delay: delay / 1000,
         ease: 'power3.out',
@@ -977,11 +1093,12 @@ function death(el, delay = 0) {
   return new Promise(resolve => {
     gsap.to(el, {
       opacity: 0,
-      y: '-=28',
+      y: '+=28',           // panels exit downward — same direction they entered from
       filter: 'blur(6px)',
-      duration: 0.5,
+      scale: 0.97,
+      duration: 0.45,
       delay: delay / 1000,
-      ease: 'power2.inOut',
+      ease: 'power2.in',
       onComplete: () => { el.remove(); resolve(); }
     });
   });
@@ -1074,13 +1191,13 @@ function showThinking(label = 'Thinking...') {
 function hideThinking() {
   return new Promise(resolve => {
     gsap.to(thinkingForm, {
-      opacity: 0,
-      y: '-=20',
+      opacity: 0.3,        // return to ambient glow, not fully hidden
+      y: '-=12',
       duration: 0.5,
       ease: 'power2.in',
       onComplete: () => {
         gsap.set(thinkingForm, { y: 0 });
-        gsap.to('#idle-mark', { opacity: 1, duration: 0.6, delay: 0.5 });
+        gsap.to('#idle-mark', { opacity: 1, duration: 0.6, delay: 0.3 });
         resolve();
       }
     });
@@ -1164,8 +1281,6 @@ const NotepadTool = (() => {
       { opacity: 1, filter: 'blur(0px)', scaleY: 1,    y: 0,
         duration: 0.6, ease: 'power3.out' }
     );
-    float(panelEl);
-
     const title = panelEl.querySelector('h2');
     title.classList.add('focused');
     setTimeout(() => title.classList.remove('focused'), 2000);
@@ -1235,6 +1350,122 @@ const NotepadTool = (() => {
 
   return { open, close, appendLine, exportMarkdown };
 })();
+
+// ── EMOTION STATE HUD WIRING ──────────────────────────────────────
+document.querySelectorAll('.state-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.state-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    ContinuityAgent.setState(btn.dataset.state);
+  });
+});
+
+// ── UNIVERSAL CARD SYSTEM ─────────────────────────────────────────
+// A card is the single atomic unit of the canvas. It can contain
+// any content: markdown, raw HTML, SVGs, maps, embedded tools, etc.
+// The AI (or scenario) calls createCard() and gets back a live DOM
+// element with birth/minimize/dismiss already wired up.
+
+function renderMarkdown(md) {
+  return md
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm,  '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm,   '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,    '<em>$1</em>')
+    .replace(/`(.+?)`/g,      '<code>$1</code>')
+    .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>(\n|$))+/g, s => `<ul>${s}</ul>`)
+    .split(/\n\n+/)
+    .map(block => block.startsWith('<') ? block : `<p>${block.replace(/\n/g,' ')}</p>`)
+    .join('\n');
+}
+
+// dismissCard: glide the card downward and fade out, then remove
+function dismissCard(el) {
+  return new Promise(resolve => {
+    gsap.to(el, {
+      opacity: 0, y: '+=32', filter: 'blur(8px)', scale: 0.96,
+      duration: 0.42, ease: 'power2.in',
+      onComplete: () => { el.remove(); resolve(); }
+    });
+  });
+}
+
+// minimizeCard: shrink card down into a new shelf card
+function minimizeCard(cardEl, title) {
+  const zone3 = document.getElementById('zone3');
+
+  // Animate the main card away (down + shrink)
+  gsap.to(cardEl, {
+    opacity: 0, scale: 0.88, y: '+=36', filter: 'blur(6px)',
+    duration: 0.38, ease: 'power2.in',
+    onComplete: () => {
+      cardEl.remove();
+
+      // Birth a shelf card in zone3
+      const shelfCard = document.createElement('div');
+      shelfCard.className = 'shelf-card';
+      shelfCard.innerHTML = `
+        <div class="card-label">${title || 'Card'}</div>
+        <div class="card-sub">Minimized · tap to expand</div>
+      `;
+      zone3.appendChild(shelfCard);
+
+      gsap.fromTo(shelfCard,
+        { opacity: 0, filter: 'blur(8px)', scale: 0.88, y: 12 },
+        { opacity: 1, filter: 'blur(0px)', scale: 1, y: 0,
+          duration: 0.35, ease: 'power3.out',
+          onComplete: () => {
+            gsap.set(shelfCard, { clearProps: 'opacity,filter' });
+            shelfCard.classList.add('live');
+          }
+        }
+      );
+    }
+  });
+}
+
+// createCard — the universal factory
+// config: {
+//   title       : string          — shown in card header
+//   content     : string          — HTML or markdown string
+//   contentType : 'html'|'markdown'  — default 'html'
+//   minimizable : bool            — show minimize button (default true)
+//   zone2       : Element         — target zone (defaults to #zone2)
+// }
+// Returns a Promise that resolves to the card Element once birth animation completes.
+function createCard({ title = '', content = '', contentType = 'html', minimizable = true, zone2 } = {}) {
+  const zone = zone2 || document.getElementById('zone2');
+  zone.classList.add('active');
+
+  const el = document.createElement('div');
+  el.className = 'card';
+
+  const bodyHTML = contentType === 'markdown' ? renderMarkdown(content) : content;
+
+  el.innerHTML = `
+    <div class="card-header">
+      <span class="card-title">${title}</span>
+      <div class="card-controls">
+        ${minimizable
+          ? `<button class="card-btn card-minimize" title="Minimize to shelf">⌄</button>`
+          : ''}
+        <button class="card-btn card-close" title="Dismiss">×</button>
+      </div>
+    </div>
+    <div class="card-content">${bodyHTML}</div>
+  `;
+
+  zone.appendChild(el);
+
+  if (minimizable) {
+    el.querySelector('.card-minimize').addEventListener('click', () => minimizeCard(el, title));
+  }
+  el.querySelector('.card-close').addEventListener('click', () => dismissCard(el));
+
+  return birth(el).then(() => el);
+}
 
 // ── TRIGGER WIRING ────────────────────────────────────────────────
 let running = false;
@@ -1330,7 +1561,6 @@ async function scenario1() {
   panel.innerHTML = `<div id="corgi-img">${makeCorgSVG()}</div>`;
   zone2.appendChild(panel);
   await birth(panel);
-  float(panel);
 
   const caption = document.createElement('div');
   caption.className = 'panel-caption';
@@ -1586,7 +1816,6 @@ async function scenario3() {
   `;
   zone2.appendChild(diagPanel);
   await birth(diagPanel);
-  float(diagPanel);
 
   const title = diagPanel.querySelector('#diag-title');
   await delay(300);
