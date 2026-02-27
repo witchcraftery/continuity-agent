@@ -1623,7 +1623,7 @@ async function scenario3() {
     { opacity: 0, filter: 'blur(8px)', scale: 0.9, y: 18 },
     { opacity: 1, filter: 'blur(0px)', scale: 1, y: 0,
       duration: 0.4, ease: 'power3.out',
-      onComplete: () => gsap.set(noteShelfCard, { clearProps: 'opacity,filter' }) }
+      onComplete: () => { gsap.set(noteShelfCard, { clearProps: 'opacity,filter' }); noteShelfCard.classList.add('live'); } }
   );
 
   let noteExpanded = false;
