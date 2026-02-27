@@ -12,8 +12,8 @@
 
   <!-- Animation compatibility shim: ensures GSAP and canvas RAF loops run
        in any environment — focused tabs, background tabs, and headless preview
-       browsers. If native RAF fires within 200ms, uses it (no change to real
-       browser behavior). Otherwise falls back to setTimeout-based RAF. -->
+       browsers. Defaults to reliable setTimeout(16) RAF, then promotes to
+       native RAF only if it proves it is firing at ≥30 fps. -->
   <script>
     (function() {
       try {
@@ -21,32 +21,34 @@
         Object.defineProperty(document, 'visibilityState', { get: () => 'visible', configurable: true });
       } catch(e) {}
 
-      // Test whether native RAF fires. If not (headless/background), patch it.
-      var _nativeRAF = window.requestAnimationFrame;
-      var _rafFired  = false;
-      var _cbs       = [];
+      var _native       = window.requestAnimationFrame.bind(window);
+      var _nativeCancel = window.cancelAnimationFrame.bind(window);
+      var _reliable     = false;  // promoted to true only if native proves fast
+      var _fires        = 0;
+      var _firstFire    = 0;
 
+      // Default: always-reliable setTimeout(16) shim (~60 fps in any environment)
       window.requestAnimationFrame = function(cb) {
-        _cbs.push(cb);
-        if (!_rafFired) {
-          // Flush all queued callbacks on next setTimeout tick
-          setTimeout(function flush() {
-            var batch = _cbs.splice(0);
-            var now   = performance.now();
-            batch.forEach(function(fn) { try { fn(now); } catch(e) {} });
-          }, 16);
-        }
-        return _cbs.length;
+        if (_reliable) return _native(cb);
+        return setTimeout(function() { try { cb(performance.now()); } catch(e) {} }, 16);
+      };
+      window.cancelAnimationFrame = function(id) {
+        if (_reliable) return _nativeCancel(id);
+        clearTimeout(id);
       };
 
-      // If native RAF fires (real focused browser), restore it and stop shim
-      _nativeRAF(function(ts) {
-        _rafFired = true;
-        window.requestAnimationFrame = _nativeRAF;
-        // Re-register any pending callbacks through native RAF
-        var pending = _cbs.splice(0);
-        pending.forEach(function(fn) { _nativeRAF(fn); });
-      });
+      // Background probe: if native RAF fires ≥4 times within 150 ms it is a
+      // genuine 60-fps browser — switch to it for smoother rendering.
+      function probe(ts) {
+        if (_firstFire === 0) _firstFire = ts;
+        _fires++;
+        if (_fires >= 4 && ts - _firstFire < 150) {
+          _reliable = true;           // native is fast — hand control back
+        } else if (_fires < 10 && !_reliable) {
+          _native(probe);             // keep probing (up to 10 native ticks)
+        }
+      }
+      _native(probe);
     })();
   </script>
 
