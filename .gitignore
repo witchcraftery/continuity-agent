@@ -1,0 +1,12 @@
+# Claude Code — local machine settings (contains absolute paths)
+.claude/settings.local.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*.swo
+.idea/
+.vscode/
