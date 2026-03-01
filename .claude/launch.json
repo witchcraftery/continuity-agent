@@ -4,19 +4,19 @@
     {
       "name": "Theme A — Late Evening",
       "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "cd \"/Users/witchcraftery-studio/Library/CloudStorage/GoogleDrive-nick@nickwichman.com/My Drive/_witchcraftery-dev/01_Dev-Projects/openclaw-projects/Continuity-Agent_conversational-canvas\" && python3 -m http.server 8081"],
+      "runtimeArgs": ["-c", "cd /Users/witchcraftery-studio/Development/continuity-agent && python3 -m http.server 8081"],
       "port": 8081
     },
     {
       "name": "Theme C — Bioluminescent Depths",
       "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "cd \"/Users/witchcraftery-studio/Library/CloudStorage/GoogleDrive-nick@nickwichman.com/My Drive/_witchcraftery-dev/01_Dev-Projects/openclaw-projects/Continuity-Agent_conversational-canvas\" && python3 -m http.server 8082"],
+      "runtimeArgs": ["-c", "cd /Users/witchcraftery-studio/Development/continuity-agent && python3 -m http.server 8082"],
       "port": 8082
     },
     {
       "name": "Theme D — Warm Film",
       "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "cd \"/Users/witchcraftery-studio/Library/CloudStorage/GoogleDrive-nick@nickwichman.com/My Drive/_witchcraftery-dev/01_Dev-Projects/openclaw-projects/Continuity-Agent_conversational-canvas\" && python3 -m http.server 8083"],
+      "runtimeArgs": ["-c", "cd /Users/witchcraftery-studio/Development/continuity-agent && python3 -m http.server 8083"],
       "port": 8083
     }
   ]
