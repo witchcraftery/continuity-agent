@@ -377,6 +377,27 @@
       color: var(--text);
     }
 
+    #pause-bg-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 100px;
+      color: var(--text-dim);
+      font-size: 0.65rem;
+      font-family: var(--font);
+      padding: 0.2rem 0.6rem;
+      cursor: pointer;
+      transition: background 200ms, color 200ms, border-color 200ms;
+      white-space: nowrap;
+      margin-left: 0.5rem;    /* visual gap from state pills */
+      letter-spacing: 0.02em;
+    }
+    #pause-bg-btn:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+    #pause-bg-btn.paused {
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.25);
+      color: var(--text);
+    }
+
     /* ── UNIVERSAL CARD ───────────────────────────────────────────── */
     .card {
       background: var(--canvas);
@@ -579,6 +600,7 @@
     <button class="state-btn" data-state="building">building</button>
     <button class="state-btn" data-state="speaking">speaking</button>
     <button class="state-btn" data-state="excited">excited</button>
+    <button id="pause-bg-btn" title="Freeze background animation">⏸</button>
   </div>
 
   <script>
@@ -604,12 +626,20 @@ const orbState = {
   approaching: 0,    // 0–1, drives scale and blur
 };
 
+// ── BACKGROUND PAUSE STATE ────────────────────────────────────────
+let bgPaused        = false; // master pause flag for all background animation
+let orbLoopLive     = true;  // false when drawOrb self-terminates due to pause
+let lissLoopLive    = true;  // false when drawLissajous self-terminates
+let ambientPulseLive = true; // false when ambientPulse self-terminates
+let pausedAt        = 0;     // timestamp (ms) when we froze, for orb resume offset
+let orbTimeOffset   = 0;     // cumulative ms subtracted from RAF timestamp so orb resumes without jumping
+
 function drawOrb(timestamp) {
   const W = orbCanvas.width;
   const H = orbCanvas.height;
   orbCtx.clearRect(0, 0, W, H);
 
-  const t   = timestamp / 1000;
+  const t   = (timestamp - orbTimeOffset) / 1000;
   const cx  = W / 2;
   const cy  = H / 2;
 
@@ -666,7 +696,8 @@ function drawOrb(timestamp) {
   orbCtx.fillStyle = ringGrad;
   orbCtx.fill();
 
-  requestAnimationFrame(drawOrb);
+  if (!bgPaused) { requestAnimationFrame(drawOrb); }
+  else           { orbLoopLive = false; pausedAt = timestamp; }
 }
 
 requestAnimationFrame(drawOrb);
@@ -718,17 +749,20 @@ function applyGradientState(stateName, durationS = 2) {
   const p = GRADIENT_PALETTES[stateName] || GRADIENT_PALETTES.idle;
   currentGradientState = stateName;
 
-  // Tween position vars (GSAP can handle % values)
+  // When paused, snap instantly so state pills are useful for color comparison
+  const dur = bgPaused ? 0 : durationS;
+
+  // Tween (or snap) position vars
   gsap.to(bgEl, {
-    duration: durationS,
+    duration: dur,
     ease: 'power1.inOut',
     '--g1x': p.g1x, '--g1y': p.g1y,
     '--g2x': p.g2x, '--g2y': p.g2y,
   });
 
-  // Tween frost blur
+  // Tween (or snap) frost blur
   gsap.to(frostEl, {
-    duration: durationS,
+    duration: dur,
     ease: 'power1.inOut',
     '--frost-blur': p.frost
   });
@@ -742,14 +776,14 @@ function applyGradientState(stateName, durationS = 2) {
     idle: 0, listening: 0.1, thinking: 0.2, searching: 0.3,
     building: 0.3, speaking: 0.7, excited: 0.9
   };
-  gsap.to(orbState, { energy: energyMap[stateName] ?? 0, duration: durationS });
+  gsap.to(orbState, { energy: energyMap[stateName] ?? 0, duration: dur });
 }
 
 // Initialize gradient
 applyGradientState('idle');
 
 // ── AMBIENT GRADIENT PULSE (always running, very slow) ────────────
-(function ambientPulse() {
+function ambientPulse() {
   const dur = 18 + Math.random() * 8; // 18–26s
   gsap.to(bgEl, {
     '--g1x': `${28 + Math.random() * 8}%`,
@@ -758,9 +792,10 @@ applyGradientState('idle');
     '--g2y': `${60 + Math.random() * 8}%`,
     duration: dur,
     ease: 'sine.inOut',
-    onComplete: ambientPulse
+    onComplete: () => { if (!bgPaused) ambientPulse(); else ambientPulseLive = false; }
   });
-})();
+}
+ambientPulse();
 
 // ── WEB AUDIO ENGINE ──────────────────────────────────────────────
 const AudioEngine = (() => {
@@ -953,7 +988,8 @@ function drawLissajous() {
   lissCtx.fill();
   lissCtx.shadowBlur = 0;
 
-  requestAnimationFrame(drawLissajous);
+  if (!bgPaused) { requestAnimationFrame(drawLissajous); }
+  else           { lissLoopLive = false; }
 }
 
 drawLissajous();
@@ -1339,6 +1375,33 @@ document.querySelectorAll('.state-btn').forEach(btn => {
     btn.classList.add('active');
     ContinuityAgent.setState(btn.dataset.state);
   });
+});
+
+// ── BACKGROUND PAUSE BUTTON ───────────────────────────────────────
+// Freezes all background animation so state colors can be inspected
+// and adjusted in DevTools without GSAP/RAF constantly overwriting values.
+const pauseBgBtn = document.getElementById('pause-bg-btn');
+pauseBgBtn.addEventListener('click', () => {
+  bgPaused = !bgPaused;
+  pauseBgBtn.textContent = bgPaused ? '▶' : '⏸';
+  pauseBgBtn.classList.toggle('paused', bgPaused);
+  pauseBgBtn.title = bgPaused ? 'Resume background' : 'Freeze background';
+
+  if (bgPaused) {
+    // Kill active gradient tweens so they stop fighting DevTools
+    gsap.killTweensOf(bgEl);
+    gsap.killTweensOf(frostEl);
+    // RAF loops self-terminate on their next frame via the bgPaused check
+  } else {
+    // Compensate for paused duration so the orb resumes position without a jump
+    orbTimeOffset += performance.now() - pausedAt;
+    // Restart loops that have self-terminated
+    if (!orbLoopLive)      { orbLoopLive      = true; requestAnimationFrame(drawOrb); }
+    if (!lissLoopLive)     { lissLoopLive     = true; requestAnimationFrame(drawLissajous); }
+    if (!ambientPulseLive) { ambientPulseLive = true; ambientPulse(); }
+    // Resume gradient tweening from current state
+    applyGradientState(currentGradientState);
+  }
 });
 
 // ── UNIVERSAL CARD SYSTEM ─────────────────────────────────────────
