@@ -1370,18 +1370,19 @@ async function scenario3() {
 // ── COLOR EDITOR ──────────────────────────────────────────────────
 const ColorEditor = (() => {
   const STORAGE_KEY = 'continuity-palette-overrides';
+  let overrides = {};   // module-scoped cache — loaded once in init
 
   function loadOverrides() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
     catch { return {}; }
   }
-  function saveOverrides(overrides) {
+  function saveOverrides() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
   }
 
   // Apply any saved overrides into GRADIENT_PALETTES before first render
   function applyStoredOverrides() {
-    const overrides = loadOverrides();
+    overrides = loadOverrides();
     for (const [state, vals] of Object.entries(overrides)) {
       if (GRADIENT_PALETTES[state]) {
         if (vals.g1) GRADIENT_PALETTES[state].g1 = vals.g1;
@@ -1428,6 +1429,7 @@ const ColorEditor = (() => {
 
   // Read both pickers, apply to live gradient instantly, persist
   function applyChange(stateName) {
+    if (!GRADIENT_PALETTES[stateName]) return;
     const hex1 = document.getElementById('picker-g1').value;
     const a1   = parseInt(document.getElementById('alpha-g1').value) / 100;
     const hex2 = document.getElementById('picker-g2').value;
@@ -1451,9 +1453,8 @@ const ColorEditor = (() => {
     document.getElementById('val-g2').textContent = newG2;
 
     // Persist to localStorage
-    const overrides = loadOverrides();
     overrides[stateName] = { g1: newG1, g2: newG2 };
-    saveOverrides(overrides);
+    saveOverrides();
   }
 
   function init() {
@@ -1461,7 +1462,9 @@ const ColorEditor = (() => {
 
     // Wire all four controls — 'input' fires on every drag tick
     ['picker-g1', 'alpha-g1', 'picker-g2', 'alpha-g2'].forEach(id => {
-      document.getElementById(id).addEventListener('input', () => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('input', () => {
         const active = document.querySelector('.state-btn.active');
         if (active) applyChange(active.dataset.state);
       });
