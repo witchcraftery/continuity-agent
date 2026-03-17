@@ -1367,6 +1367,120 @@ async function scenario3() {
   setTimeout(expandNote, 3000);
 }
 
+// ── COLOR EDITOR ──────────────────────────────────────────────────
+const ColorEditor = (() => {
+  const STORAGE_KEY = 'continuity-palette-overrides';
+
+  function loadOverrides() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch { return {}; }
+  }
+  function saveOverrides(overrides) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides));
+  }
+
+  // Apply any saved overrides into GRADIENT_PALETTES before first render
+  function applyStoredOverrides() {
+    const overrides = loadOverrides();
+    for (const [state, vals] of Object.entries(overrides)) {
+      if (GRADIENT_PALETTES[state]) {
+        if (vals.g1) GRADIENT_PALETTES[state].g1 = vals.g1;
+        if (vals.g2) GRADIENT_PALETTES[state].g2 = vals.g2;
+      }
+    }
+  }
+
+  // Parse rgba(r,g,b,a) → { hex: '#rrggbb', alpha: 0.78 }
+  function parseRgba(rgba) {
+    const m = rgba.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)/);
+    if (!m) return { hex: '#888888', alpha: 0.8 };
+    const [, r, g, b, a] = m;
+    const hex = '#' + [r, g, b].map(n => parseInt(n).toString(16).padStart(2, '0')).join('');
+    return { hex, alpha: a !== undefined ? parseFloat(a) : 1 };
+  }
+
+  // Build rgba(r,g,b,alpha) from hex string + alpha float
+  function buildRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha.toFixed(2)})`;
+  }
+
+  // Sync the two pickers + sliders to a named state's current palette values
+  function syncToState(stateName) {
+    const p = GRADIENT_PALETTES[stateName];
+    if (!p) return;
+
+    const { hex: hex1, alpha: a1 } = parseRgba(p.g1);
+    const { hex: hex2, alpha: a2 } = parseRgba(p.g2);
+
+    document.getElementById('picker-g1').value          = hex1;
+    document.getElementById('alpha-g1').value           = Math.round(a1 * 100);
+    document.getElementById('pct-g1').textContent       = Math.round(a1 * 100) + '%';
+    document.getElementById('val-g1').textContent       = p.g1;
+
+    document.getElementById('picker-g2').value          = hex2;
+    document.getElementById('alpha-g2').value           = Math.round(a2 * 100);
+    document.getElementById('pct-g2').textContent       = Math.round(a2 * 100) + '%';
+    document.getElementById('val-g2').textContent       = p.g2;
+  }
+
+  // Read both pickers, apply to live gradient instantly, persist
+  function applyChange(stateName) {
+    const hex1 = document.getElementById('picker-g1').value;
+    const a1   = parseInt(document.getElementById('alpha-g1').value) / 100;
+    const hex2 = document.getElementById('picker-g2').value;
+    const a2   = parseInt(document.getElementById('alpha-g2').value) / 100;
+
+    const newG1 = buildRgba(hex1, a1);
+    const newG2 = buildRgba(hex2, a2);
+
+    // Mutate live palette so future setState() calls use the new colors
+    GRADIENT_PALETTES[stateName].g1 = newG1;
+    GRADIENT_PALETTES[stateName].g2 = newG2;
+
+    // Instant CSS var update — bypass GSAP tween for live feel
+    bgEl.style.setProperty('--g1', newG1);
+    bgEl.style.setProperty('--g2', newG2);
+
+    // Update labels
+    document.getElementById('pct-g1').textContent = Math.round(a1 * 100) + '%';
+    document.getElementById('val-g1').textContent = newG1;
+    document.getElementById('pct-g2').textContent = Math.round(a2 * 100) + '%';
+    document.getElementById('val-g2').textContent = newG2;
+
+    // Persist to localStorage
+    const overrides = loadOverrides();
+    overrides[stateName] = { g1: newG1, g2: newG2 };
+    saveOverrides(overrides);
+  }
+
+  function init() {
+    applyStoredOverrides();
+
+    // Wire all four controls — 'input' fires on every drag tick
+    ['picker-g1', 'alpha-g1', 'picker-g2', 'alpha-g2'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        const active = document.querySelector('.state-btn.active');
+        if (active) applyChange(active.dataset.state);
+      });
+    });
+
+    // Sync pickers whenever a state pill is clicked
+    document.querySelectorAll('.state-btn').forEach(btn => {
+      btn.addEventListener('click', () => syncToState(btn.dataset.state));
+    });
+
+    // Prime with idle on load
+    syncToState('idle');
+  }
+
+  return { init, syncToState };
+})();
+
+ColorEditor.init();
+
 // ── INITIAL STATE ─────────────────────────────────────────────────
 // Ensure idle mark is visible on load (thinking form is already opacity:0.3 from CSS)
 gsap.set('#idle-mark', { opacity: 1 });
