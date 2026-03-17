@@ -91,6 +91,23 @@
     <button id="pause-bg-btn" title="Freeze background animation">⏸</button>
   </div>
 
+  <!-- COLOR EDITOR — live palette tuning for active state -->
+  <div id="color-editor">
+    <div class="ce-group">
+      <input type="color" id="picker-g1" title="Primary color" />
+      <input type="range" id="alpha-g1" class="alpha-slider" min="0" max="100" step="1" value="78" />
+      <span class="ce-pct" id="pct-g1">78%</span>
+      <span class="ce-val" id="val-g1">rgba(71,35,45,0.78)</span>
+    </div>
+    <span class="ce-sep">·</span>
+    <div class="ce-group">
+      <input type="color" id="picker-g2" title="Secondary color" />
+      <input type="range" id="alpha-g2" class="alpha-slider" min="0" max="100" step="1" value="80" />
+      <span class="ce-pct" id="pct-g2">80%</span>
+      <span class="ce-val" id="val-g2">rgba(18,71,73,0.80)</span>
+    </div>
+  </div>
+
   <!-- App logic -->
   <script src="js/bioluminescent.js"></script>
 </body>
