@@ -94,17 +94,17 @@
   <!-- COLOR EDITOR — live palette tuning for active state -->
   <div id="color-editor">
     <div class="ce-group">
-      <input type="color" id="picker-g1" title="Primary color" />
-      <input type="range" id="alpha-g1" class="alpha-slider" min="0" max="100" step="1" value="78" />
-      <span class="ce-pct" id="pct-g1">78%</span>
-      <span class="ce-val" id="val-g1">rgba(71,35,45,0.78)</span>
+      <input type="color" id="picker-g1" title="Primary color" value="#472328" />
+      <input type="range" id="alpha-g1" class="alpha-slider" min="0" max="100" step="1" value="78" title="Primary opacity" />
+      <span class="ce-pct" id="pct-g1" aria-live="polite">78%</span>
+      <span class="ce-val" id="val-g1" aria-live="polite">rgba(71,35,45,0.78)</span>
     </div>
-    <span class="ce-sep">·</span>
+    <span class="ce-sep" aria-hidden="true">·</span>
     <div class="ce-group">
-      <input type="color" id="picker-g2" title="Secondary color" />
-      <input type="range" id="alpha-g2" class="alpha-slider" min="0" max="100" step="1" value="80" />
-      <span class="ce-pct" id="pct-g2">80%</span>
-      <span class="ce-val" id="val-g2">rgba(18,71,73,0.80)</span>
+      <input type="color" id="picker-g2" title="Secondary color" value="#124749" />
+      <input type="range" id="alpha-g2" class="alpha-slider" min="0" max="100" step="1" value="80" title="Secondary opacity" />
+      <span class="ce-pct" id="pct-g2" aria-live="polite">80%</span>
+      <span class="ce-val" id="val-g2" aria-live="polite">rgba(18,71,73,0.80)</span>
     </div>
   </div>
 
