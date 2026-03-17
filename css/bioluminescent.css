@@ -481,3 +481,89 @@ html, body {
 .panel h2               { padding: 0 0 1rem 0; margin-bottom: 0.75rem; }
 .notepad                { padding: 2rem 2.5rem; }
 .notepad h2             { padding: 0 0 1rem 0; margin-bottom: 0.75rem; }
+
+/* ── COLOR EDITOR ─────────────────────────────────────────────── */
+#color-editor {
+  position: fixed;
+  top: 106px;                   /* 68px trigger-bar + ~36px state-bar + 2px gap */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 198;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.3rem 1rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 2rem;
+}
+
+.ce-group {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/* Native color swatch — styled as a small rounded square */
+#color-editor input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 4px;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  flex-shrink: 0;
+}
+#color-editor input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; border-radius: 3px; }
+#color-editor input[type="color"]::-webkit-color-swatch        { border: none; border-radius: 3px; }
+
+/* Opacity slider */
+.alpha-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 52px;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(255,255,255,0.18);
+  outline: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.alpha-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  cursor: pointer;
+}
+
+/* Percentage label */
+.ce-pct {
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  font-family: var(--font);
+  min-width: 2.4ch;
+  text-align: right;
+}
+
+/* Full rgba value — selectable for copy-paste to Claude */
+.ce-val {
+  font-size: 0.5rem;
+  color: var(--text-dim);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  opacity: 0.55;
+  white-space: nowrap;
+  user-select: all;
+  cursor: text;
+}
+
+.ce-sep {
+  color: var(--text-dim);
+  opacity: 0.3;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
